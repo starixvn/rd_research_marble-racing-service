@@ -1,19 +1,23 @@
-import { Duration, GameSettings } from "sc-game-base/src/core/game-definition";
 import { TableGameDefinition } from "sc-game-base/src/table";
-
-export default class MarbleRacingGameDefinition extends TableGameDefinition {
+import { Duration as BaseDuration } from "sc-game-base/src/core/game-definition";
+export default class GameDefinition extends TableGameDefinition {
     declare durations: Duration;
-
-    constructor(
-        gameSetting: GameSettings,
-        generateResult: Function,
-        settle: Function,
-        generateResultForHash: Function) {
-        super(
-            gameSetting,
-            generateResult,
-            settle,
-            generateResultForHash
-        );
+    constructor(gameSettings: GameSettings, generateResult: Function, settle: Function, generateRawResultForHash: Function) {
+        super(gameSettings, generateResult, settle, generateRawResultForHash);
     }
 }
+
+export type GameSettings = {
+    id: number;
+    name: string;
+    configName: string;
+    durations: Duration;
+    provablyFair?: boolean;
+    choices: string[];
+    choicesMapper: any;
+    hedgeBetGroups: any[];
+    numberOfRoundHistory: number;
+    historyPageSize: number;
+};
+
+export type Duration = BaseDuration & { streamingVideo: number; startingRound: number };

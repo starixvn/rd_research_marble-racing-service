@@ -1,7 +1,11 @@
 {
-    "name": "marble-racing-service",
-    "version": "0.0.1",
+    "name": "marble-football-service",
+    "version": "1.0.0",
     "description": "",
+    "repository": {
+        "type": "git",
+        "url": "https://git3.nexdev.net/l1/game-services/marble-football-service.git"
+    },
     "author": "",
     "license": "ISC",
     "main": "./build/app.js",
@@ -11,7 +15,7 @@
         "test": "jest --testPathPattern=tests/unit-tests/ ",
         "test-coverage": "jest --collect-coverage --testPathPattern=tests/unit-tests/",
         "integration-test": "npm run build && jest --config ./jest.integration-test.config.cjs --testPathPattern=tests/integration-tests/ --detectOpenHandles --forceExit",
-        "dev": "cross-env NODE_ENV=development tsx watch ./src/app.ts --preserve-symlinks",
+        "dev": "cross-env NODE_ENV=development tsx watch ./src/app.ts",
         "dev-build": "nodemon --experimental-loader=extensionless --watch ./build ./build/app.js",
         "reg": "npm set registry http://npm.lumigame.com",
         "fetch-video-timelines": "tsx src/timelines/fetch-default-video-timeline.ts"
@@ -32,6 +36,7 @@
         "mongoose": "^5.9.25",
         "random-js": "^2.1.0",
         "sc-common": "^1.8.1",
+        "sc-game-base": "5.3.1-beta.0",
         "sc-game-management-client": "^0.1.0",
         "socket.io": "^4.5.4"
     },

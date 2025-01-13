@@ -1,6 +1,6 @@
-import { eventTypes, GameClientDriver, normalUser } from "sc-game-service-integration-utils";
-import gameSettings from "../_stubs/game-settings";
 import { currencyData } from "../_stubs/test-data";
+import { GameClientDriver, normalUser, eventTypes } from "sc-game-service-integration-utils";
+import gameSettings from "../_stubs/game-settings";
 
 export const checkConnect = (socketOptions, callback) => {
     const normalUserClientDriver = new GameClientDriver(socketOptions, initUserSession(normalUser));

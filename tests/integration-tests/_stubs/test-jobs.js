@@ -25,13 +25,6 @@ export const startSetupDataProcess = (processId, overrideGameConfigs, onSetupDat
     return setupDataProcess;
 };
 
-const STDIO_OPTIONS = {
-    STDIN : "pipe",
-    STDOUT: "pipe",
-    STDERR: "pipe",
-    IPC_CHANNEL: "ipc"
-}
-
 export const startServiceProcess = (processId, overrideAppConfigs, onServiceStarted) => {
     const serviceProcess = spawn("node", [
         "--experimental-loader=extensionless",
@@ -40,12 +33,7 @@ export const startServiceProcess = (processId, overrideAppConfigs, onServiceStar
         `${processId}`,
         `${JSON.stringify(overrideAppConfigs)}`,
         {
-            stdio: [
-                STDIO_OPTIONS.STDIN, 
-                STDIO_OPTIONS.STDOUT, 
-                STDIO_OPTIONS.STDERR,
-                STDIO_OPTIONS.IPC_CHANNEL
-            ],
+            stdio: ["pipe", "pipe", "pipe", "ipc"],
         },
     ]);
 

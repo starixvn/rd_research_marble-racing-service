@@ -49,7 +49,30 @@ const gameConfig = {
 
 const pfResults = [];
 
-const roundsData = [];
+const roundsData = [{
+    "id": 1,
+    "result": {
+      "firstHalf": "HAHA",
+      "secondHalf": "HAHA",
+      "firstHalfVideo": "3ff0610ea6b1620a3136fb41df7c2402e77fad6dfbecd88dc3493c3501ac82f7",
+      "secondHalfVideo": "3ff0610ea6b1620a3136fb41df7c2402e77fad6dfbecd88dc3493c3501ac82f7",
+      "overUnderValue": 4.5,
+      "homeWinsOnDraw": true,
+      "tournamentId": "67516aadda8b0949a41c9af5"
+    },
+    "settlementResult": {
+      "home": false,
+      "away": false,
+      "draw": true,
+      "over": true,
+      "under": false,
+      "odd": false,
+      "even": true
+    },
+    "time": new Date("12/20/2014 04:11"),
+    "exchangeRateId": 2128
+  }
+];
 
 const userBetData = (uid) => {
     return [];
