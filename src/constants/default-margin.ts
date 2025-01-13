@@ -1,0 +1,1 @@
+export const DEFAULT_MARGIN = 0.02;
