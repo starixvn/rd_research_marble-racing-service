@@ -1,9 +1,9 @@
-const appConfigs = {
+export default {
     hostingPort: 5000,
     apiSettings: {
         enabledApi: true,
-        apiUrl: "https://l1-proxy3.lumigame.com/game-api",
-        authUrl: "https://l1-auth3.lumigame.com",
+        apiUrl: "http://l1-game-api-local3-service:5000",
+        authUrl: "http://l1-auth-api-local3-service:5000",
         client: {
             id: "game-server",
             secret: "gameserver@20luminet&",
@@ -24,7 +24,7 @@ const appConfigs = {
     },
     enabledLogs: true,
     database: {
-        url: "mongodb://lmn_backend:LmnBackend@10.10.50.12:39103,10.10.50.13:39103,10.10.50.14:39103/",
+        url: "mongodb://localhost:27017",
         options: {
             dbName: "minigame",
             useNewUrlParser: true,
@@ -33,16 +33,16 @@ const appConfigs = {
         },
     },
     sentry: {
-        sentryUrl: "https://3711f3082699411a8716a3221ca1fd9e@sentry.lumigame.com/89",
-        logIdentifier: "MarbleFootBall-Dev",
-        env: "DEV",
+        sentryUrl: "https://13f39b8359404ed5aec23655e64ccf78@sentry.lumigame.com/2",
+        logIdentifier: "MarbleFootBall",
+        env: "LOCAL_3",
     },
     authenticateSettings: {
         url: "https://l1-auth3.lumigame.com",
         id: "game-services",
         secret: "gameservices@20luminet&",
         requestTimeout: 10000,
-        useAuthenticate: false,
+        useAuthenticate: true,
         audiences: ["api", "admin-api"],
     },
     userServiceSettings: {
@@ -63,13 +63,10 @@ const appConfigs = {
         enabled: true,
         endpoint: "http://10.10.50.69:4318/v1/traces",
     },
-    tournament: {
-        code: "UCL",
-        teams: ["MCI", "RMA", "BAR", "LIV", "ARS", "FCB", "INT", "LEV", "AVL", "ATA", "BVB", "JUV", "PSG", "SCP", "ATM", "MIL"],
-    },
+
     liveStreamServer: "https://d1aof1lwumql9k.cloudfront.net/104_STAGING/",
     gameResultSettings: {
-        baseUrl: "https://l1-result3.lumigame.com",
+        baseUrl: "http://l1-game-result-local3-service:5000",
         id: "Game Service",
         key: "58148de3-b895-4f6b-82de-a35eed1b4b28",
     },
@@ -78,5 +75,3 @@ const appConfigs = {
         url: "",
     },
 };
-
-export default appConfigs;

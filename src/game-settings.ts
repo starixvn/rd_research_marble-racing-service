@@ -1,9 +1,9 @@
 import { BET_CHOICES } from "./constants/bet-choices";
 
 export default {
-    id: 105,
-    name: "MarbleRacing",
-    configName: "marbleracing",
+    id: 104,
+    name: "marblefootball",
+    configName: "marblefootball",
     durations: {
         wholeRound: 151,
         startingRound: 141,

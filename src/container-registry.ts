@@ -1,5 +1,6 @@
-import { AwilixContainer } from "awilix";
+import { asValue, AwilixContainer } from "awilix";
 import { Table } from "sc-game-base";
+import rounds from "./models/rounds";
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     register(appConfigs: any, definition: any, gameData: any): AwilixContainer<any> {
         super.register(appConfigs, definition, gameData);
@@ -11,7 +12,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
         super.registerModels();
 
         this.container.register({
-
+            roundsRepository: asValue(rounds),
         });
     }
 
