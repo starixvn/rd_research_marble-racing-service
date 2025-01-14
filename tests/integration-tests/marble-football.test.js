@@ -4,7 +4,6 @@ describe("Marble football integration tests", () => {
     // require("./test-suites/core-functionality/sign-in.test");
     // require("./test-suites/core-functionality/place-bet.test");
     // require("./test-suites/core-functionality/settle.test");
-    // require("./test-suites/core-functionality/get-pf-info.test");
     require("./test-suites/core-functionality/check-test.test");
 
 });

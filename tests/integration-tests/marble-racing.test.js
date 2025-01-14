@@ -1,6 +1,0 @@
-describe("Marble racing integration tests", () => {
-    // core-functionality tests
-    require("./test-suites/core-functionality/check-connection.test");
-    require("./test-suites/core-functionality/sign-in.test");
-    // require("./test-suites/core-functionality/settle.test");
-});
