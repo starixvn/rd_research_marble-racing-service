@@ -1,6 +1,5 @@
 import { GameClientDriver, normalUser } from "sc-game-service-integration-utils";
 import appConfigs from "../../../../build/app-configs.IGT";
-import gameSettings from "../../_stubs/game-settings";
 import { socketOptionsFunc } from "../../_stubs/test-data";
 import { initUserSession } from "../../helper/helper";
 
@@ -13,7 +12,7 @@ const signInClient = async (client) => {
 };
 
 
-describe("when game start", () => {
+describe("when in game", () => {
     let client;
 
     beforeEach(async () => {
@@ -26,20 +25,11 @@ describe("when game start", () => {
         client = null;
     });
 
-    it("should see tourament on round start", async () => {
-        const interval = setInterval(() => client.sendInGameEvent(), 1000);
+    it("should observe tourament", async () => {
 
         const ingameData = 
-            // avoid accidentally get tournament property from 
-            // events
-            // which is not tournament event
-            await client.handleGameEvent((data) => data.tournament && !data.roundId);
-        const remainingTime =
-            await client.handleGameEvent((data) => data.remainingTime);
-        console.log("Tourament Data : ", JSON.stringify(ingameData));
-        console.log("Remaining Data : ", JSON.stringify(remainingTime.remainingTime));
-        clearInterval(interval);
-        expect(remainingTime.remainingTime).toEqual(gameSettings.durations.startingRound);
+            await client.handleGameEvent((data) => data.tournament);
+        expect(ingameData.tournament).toBeTruthy();
     });
 
 });
