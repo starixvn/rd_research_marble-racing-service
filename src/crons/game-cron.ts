@@ -1,10 +1,10 @@
+import axios from "axios";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import { Table } from "sc-game-base";
-import GameData from "../game-data";
-import GameDefinition from "../game-definition";
 import AppConfigs from "../app-configs";
 import { TournamentConsumer } from "../consumers";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import axios from "axios";
+import GameData from "../game-data";
+import GameDefinition from "../game-definition";
 import { retry } from "../helpers";
 import { generateVideoName } from "../helpers/result-helper";
 import defaultVideoTimelines from "../timelines/video-timelines";
@@ -112,7 +112,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         const tournament = await this.tournamentConsumer.getCurrentTournament();
 
         this.gameData.publishedTournament = JSON.parse(JSON.stringify(tournament));
-
+        console.log("TOURAMENT PUBLISHED");
         this.runningRoundInfoPublisher.publishToAllUsers({ tournament });
     }
 
@@ -128,7 +128,8 @@ export default class GameCron extends Table.Crons.TableGameCron {
         }
 
         const remainingTime = this.gameData.remainingTime;
-
+        console.log("remaining time :" , remainingTime)
+        console.log("starting round ", durations.startingRound)
         if (remainingTime === durations.startingRound) {
             await this.publishTournament();
         }
