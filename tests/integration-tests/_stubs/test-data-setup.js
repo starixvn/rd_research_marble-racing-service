@@ -1,6 +1,4 @@
 import mongoose from "mongoose";
-import users from "../models/users";
-import promotions from "../models/promotions";
 import { middlewares } from "sc-common";
 import {
     createCurrencyGroupGames,
@@ -11,19 +9,20 @@ import {
     createPartnerConfig,
     normalUser,
 } from "sc-game-service-integration-utils";
+import promotions from "../models/promotions";
+import users from "../models/users";
 
-import { bets, rounds, betLogs } from "../../../build/models";
+import appConfigs from "../../../build/app-configs.IGT";
+import { betLogs, bets, rounds } from "../../../build/models";
 import {
     currencyData,
     game,
     gameConfig,
+    promotions as promotionData,
     roundsData,
     userBetData,
-    promotions as promotionData,
     userBetLogData,
-    pfResults,
 } from "./test-data";
-import appConfigs from "../../../build/app-configs.IGT";
 
 const connectDatabase = async () => {
     await middlewares.database.configureDatabase(mongoose, appConfigs.database);

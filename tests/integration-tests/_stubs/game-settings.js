@@ -6,5 +6,6 @@ export default Object.assign(gameSettings, {
         placingBets: 8,
         lockingBet: 5,
         streamingVideo: 2,
+        startingRound: 3,
     },
 });
