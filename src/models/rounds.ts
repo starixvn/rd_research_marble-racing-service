@@ -4,27 +4,16 @@ import { MatchType } from "./tournaments";
 
 export type ResultType = {
     tournamentId?: mongoose.Types.ObjectId;
-    firstHalf: string;
-    secondHalf: string;
-    firstHalfVideo: string;
-    secondHalfVideo: string;
-    overUnderValue: number;
-    homeWinsOnDraw: boolean;
-    penalty: { home: number; away: number };
-    firstHalfTimeline?: number[];
-    secondHalfTimeline?: number[];
+    result: string;
+    resultVideoName?: string;
+    videoTimeline?: number[];
 };
 
 const resultSchema = new mongoose.Schema<ResultType>(
     {
         tournamentId: { type: mongoose.Schema.Types.ObjectId },
-        firstHalf: { type: String },
-        secondHalf: { type: String },
-        firstHalfVideo: { type: String },
-        secondHalfVideo: { type: String },
-        overUnderValue: { type: Number },
-        homeWinsOnDraw: { type: Boolean },
-        penalty: { type: Object },
+        result: { type: String},
+        resultVideoName: { type: String}
     },
     { _id: false }
 );
@@ -39,18 +28,12 @@ const matchSchema = new mongoose.Schema<MatchType>(
 
 export type SettlementResultType = {
     [key in keyof typeof BET_CHOICES]: boolean;
-} & { draw4: boolean };
+} 
 
 const settlementResultSchema = new mongoose.Schema<SettlementResultType>(
     {
         home: { type: Boolean },
         away: { type: Boolean },
-        draw: { type: Boolean },
-        draw4: { type: Boolean },
-        over: { type: Boolean },
-        under: { type: Boolean },
-        odd: { type: Boolean },
-        even: { type: Boolean },
     },
     { _id: false }
 );

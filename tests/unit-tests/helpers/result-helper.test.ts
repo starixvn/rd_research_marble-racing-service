@@ -1,7 +1,7 @@
+import crypto from "crypto";
 import { resultHelper } from "../../../src/helpers";
 import { HalfConfigType } from "../../../src/match-configs";
 import { ResultType } from "../../../src/models/rounds";
-import crypto from "crypto";
 
 jest.mock("chance", () => {
     return function () {
@@ -37,16 +37,11 @@ describe("Result Helper", () => {
     describe("generateResult", () => {
         it("should generate a result based on match configuration", () => {
             // Act
-            const result = resultHelper.generateResult({ randomMode: 1 });
+            const result = resultHelper.generateResult();
 
             // Assert
-            expect(result.firstHalf).toBeDefined();
-            expect(result.secondHalf).toBeDefined();
-            expect(result.overUnderValue).toBe(4.5);
-            expect(result.homeWinsOnDraw).toBe(true);
-            expect(result.firstHalfVideo).toBeDefined();
-            expect(result.secondHalfVideo).toBeDefined();
-            expect(result.penalty).toStrictEqual({ home: 2, away: 1 });
+            expect(result.result).toBeDefined();
+            expect(result.resultVideoName).toBeDefined();
         });
 
         it("should use provided pool if available", () => {

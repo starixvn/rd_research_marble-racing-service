@@ -1,6 +1,6 @@
 import Chance from "chance";
-import { MersenneTwister19937, Random } from "random-js";
 import { createHash, getRandomValues, randomInt } from "crypto";
+import { MersenneTwister19937, Random } from "random-js";
 
 const chance = new Chance();
 const random = new Random(MersenneTwister19937.autoSeed());
@@ -36,7 +36,10 @@ export const randomModes: any = {
 };
 
 export const getRandomIndexFromArray = (randomMode: number, arrLength: number): number => {
-    const mode = 1 <= randomMode && randomMode <= 3 ? randomMode : 1;
+    const mode = 1 <= randomMode && randomMode <= 3 
+            ? randomMode 
+            : 1;
+
     const randomShuffles: Function[] = randomModes[mode];
     return chance.pickone(randomShuffles)(arrLength);
 };

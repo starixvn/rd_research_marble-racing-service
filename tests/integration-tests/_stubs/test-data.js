@@ -74,6 +74,74 @@ const roundsData = [{
   }
 ];
 
+const tournamentData = {
+    "matches": [
+        {
+            "home": "JUV",
+            "away": "ATM"
+        },
+        {
+            "home": "ARS",
+            "away": "LIV"
+        },
+        {
+            "home": "PSG",
+            "away": "BVB"
+        },
+        {
+            "home": "LEV",
+            "away": "RMA"
+        },
+        {
+            "home": "ATA",
+            "away": "SLB"
+        },
+        {
+            "home": "FCB",
+            "away": "MCI"
+        },
+        {
+            "home": "INT",
+            "away": "MIL"
+        },
+        {
+            "home": "AVL",
+            "away": "BAR"
+        },
+        {
+            "home": "",
+            "away": ""
+        },
+        {
+            "home": "",
+            "away": ""
+        },
+        {
+            "home": "",
+            "away": ""
+        },
+        {
+            "home": "",
+            "away": ""
+        },
+        {
+            "home": "",
+            "away": ""
+        },
+        {
+            "home": "",
+            "away": ""
+        },
+        {
+            "home": "",
+            "away": ""
+        }
+    ],
+    "currentMatch": 0,
+    "ended": false,
+    "code": "UCL",
+}
+
 const userBetData = (uid) => {
     return [];
 };
@@ -84,5 +152,5 @@ const userBetLogData = (uid) => {
 
 const promotions = [];
 
-export { currencyData, game, gameConfig, pfResults, promotions, roundsData, socketOptionsFunc, userBetData, userBetLogData };
+export { currencyData, game, gameConfig, pfResults, promotions, roundsData, socketOptionsFunc, tournamentData, userBetData, userBetLogData };
 

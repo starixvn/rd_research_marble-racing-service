@@ -1,106 +1,52 @@
-import { halfConfig, HalfConfigType, matchConfig } from "../match-configs";
-import { ResultType, SettlementResultType } from "../models/rounds";
 import Chance from "chance";
-import { shuffle } from "./shuffle";
 import crypto from "crypto";
-import { NUMBER_OF_VIDEOS, POOL_SIZE } from "../constants";
-import { randomHelper } from ".";
+import { NUMBER_OF_MARBLES, NUMBER_OF_VIDEOS, NUMBER_OF_WINNER_MARLBE as NUMBER_OF_WINNER_MARBLES } from "../constants";
+import { ResultType, SettlementResultType } from "../models/rounds";
+import { getRandomIndexFromArray } from "./random-helper";
 
-type DataResultType = {
-    randomMode: number;
-    pool?: string[];
-};
-export const generateResult = (data: DataResultType): ResultType => {
-    const chance = new Chance();
-    const pool = data.pool || createScorePool(halfConfig, POOL_SIZE);
-    const randomMode = data.randomMode || 1;
+export const generateResult = (): ResultType => {
 
-    const firstHalf = generateResultForHalf({ randomMode, pool });
-    const secondHalf = generateResultForHalf({ randomMode, pool });
-    const videoInfo = getVideoInfoFromResult(firstHalf, secondHalf);
-    const homeWinsOnDraw = chance.bool();
-    const penalty = generatePenaltyResult(homeWinsOnDraw);
+    const result = generateRacingLapResult(NUMBER_OF_MARBLES);
+    const videoInfo = getVideoInfoFromResult(result);
 
     return {
-        firstHalf,
-        secondHalf,
+        result,
         ...videoInfo,
-        overUnderValue: matchConfig.ou,
-        homeWinsOnDraw,
-        penalty,
     };
 };
 
 export const generateResultFromAdminRawResult = (roundResult: ResultType): ResultType => {
-    const firstHalf = roundResult.firstHalf || "0";
-    const secondHalf = roundResult.secondHalf || "0";
-    const videoInfo = getVideoInfoFromResult(firstHalf, secondHalf);
-    const penalty = generatePenaltyResult(roundResult.homeWinsOnDraw);
+    const result = roundResult.result ;
+    const videoInfo = getVideoInfoFromResult(result);
 
     return {
-        firstHalf,
-        secondHalf,
-        homeWinsOnDraw: roundResult.homeWinsOnDraw,
-        penalty,
-        ...videoInfo,
-        overUnderValue: matchConfig.ou,
+        result,
+        ...videoInfo
     };
 };
 
 export const getSettlementResult = (roundResult: ResultType): SettlementResultType => {
-    const { firstHalf, secondHalf } = roundResult;
+    const winningMarbles = roundResult
+        .result
+        .slice(0, NUMBER_OF_WINNER_MARBLES)
+        .split("");
 
-    const firstHalfHomeGoals = firstHalf.split("H").length - 1;
-    const firstHalfAwayGoals = firstHalf.split("A").length - 1;
-
-    const secondHalfHomeGoals = secondHalf.split("H").length - 1;
-    const secondHalfAwayGoals = secondHalf.split("A").length - 1;
-
-    const homeGoals = firstHalfHomeGoals + secondHalfHomeGoals;
-    const awayGoals = firstHalfAwayGoals + secondHalfAwayGoals;
-
-    const isOver = homeGoals + awayGoals > roundResult.overUnderValue;
-    const isOdd = (homeGoals + awayGoals) % 2 === 1;
+    const homeWinCount = winningMarbles.filter(item => Number(item) % 2 !== 0).length;
+    const awayWinCount = winningMarbles.length - homeWinCount;
 
     return {
-        home: homeGoals > awayGoals,
-        away: awayGoals > homeGoals,
-        draw: homeGoals === awayGoals,
-        draw4: homeGoals === awayGoals && homeGoals === 4,
-        over: isOver,
-        under: !isOver,
-        odd: isOdd,
-        even: !isOdd,
+        home: homeWinCount > awayWinCount,
+        away: homeWinCount < awayWinCount,
     };
 };
 
 export const generateRawResultForHash = () => {};
 
-const generateResultForHalf = (data: DataResultType) => {
-    const scoreResult = getScoreFromPool(data);
-
-    const [homeGoals, awayGoals] = scoreResult.split("-").map(Number);
-    const sequence = Array(homeGoals).fill("H").concat(Array(awayGoals).fill("A"));
-
-    const result = shuffle(sequence).join("");
-
-    return result || "0";
-};
-
-const getScoreFromPool = (data: DataResultType) => {
-    const pool = data.pool || createScorePool(halfConfig, POOL_SIZE);
-
-    const index = randomHelper.getRandomIndexFromArray(data.randomMode, POOL_SIZE);
-    return pool[index];
-};
-
-const getVideoInfoFromResult = (firstHalf: string, secondHalf: string) => {
-    const firstHalfVideo = generateVideoName(firstHalf);
-    const secondHalfVideo = generateVideoName(secondHalf, false, firstHalfVideo);
+const getVideoInfoFromResult = (result: string) => {
+    const resultVideoName = generateVideoName(result);
 
     return {
-        firstHalfVideo,
-        secondHalfVideo,
+        resultVideoName
     };
 };
 
@@ -114,29 +60,25 @@ export const generateVideoName = (result: string, videoDefault = false, ignoredV
         videoIndex = (videoIndex + 1) % numberOfVideos;
         videoName = crypto.createHash("sha256").update(`${result}-${videoIndex}`).digest("hex");
     }
-
     return videoName;
 };
 
-const generatePenaltyResult = (homeWinsOnDraw: boolean) => {
-    const chance = new Chance();
-    const maxLosingPenalty = 4;
-    const losingTeamPenalty = chance.integer({ min: 0, max: maxLosingPenalty });
-    const difference = losingTeamPenalty === maxLosingPenalty ? 1 : chance.integer({ min: 1, max: 2 });
-    const winningTeamPenalty = losingTeamPenalty + difference;
+function generateRacingLapResult(numberOfMarbles: number) {
+    // init the array
+    const marblePool = Array.from(Array(numberOfMarbles).keys());
+    const resultPool: number[] =[];
+    // pick a random ball from array
+    loop(numberOfMarbles, () => {
+        const index = getRandomIndexFromArray(1, marblePool.length);
+        resultPool.push(marblePool[index]);
+        marblePool.splice(index, 1);
+    });
 
-    return homeWinsOnDraw ? { home: winningTeamPenalty, away: losingTeamPenalty } : { home: losingTeamPenalty, away: winningTeamPenalty };
-};
+    return resultPool.join("");
+}
 
-export function createScorePool(config: HalfConfigType, poolSize: number): string[] {
-    const pool: string[] = [];
-
-    for (const [score, rate] of Object.entries(config.scoreRate)) {
-        const count = Math.round(rate * poolSize);
-        for (let i = 0; i < count; i++) {
-            pool.push(score);
-        }
+function loop(loopCount: number, callback: Function) {
+    for (let i = 0; i < loopCount; i++) {
+        callback();
     }
-
-    return shuffle(shuffle(pool));
 }
