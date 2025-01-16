@@ -5,7 +5,7 @@ import { MatchType } from "./tournaments";
 export type ResultType = {
     tournamentId?: mongoose.Schema.Types.ObjectId;
     result: string;
-    resultVideoName?: string;
+    resultVideoName: string;
     videoTimeline?: number[];
 };
 
