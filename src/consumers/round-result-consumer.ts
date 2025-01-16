@@ -1,8 +1,8 @@
 import { RoundResultConsumer as RoundResultConsumerBase } from "sc-game-base/src/core/event-consumers";
-import GameData from "../game-data";
-import type TournamentConsumer from "./tournament-consumer";
-import { resultHelper } from "../helpers";
 import { encrypt } from "sc-game-base/src/core/helpers/crypto-helper";
+import GameData from "../game-data";
+import { resultHelper } from "../helpers";
+import type TournamentConsumer from "./tournament-consumer";
 export default class RoundResultConsumer extends RoundResultConsumerBase {
     declare gameData: GameData;
     tournamentConsumer: TournamentConsumer;

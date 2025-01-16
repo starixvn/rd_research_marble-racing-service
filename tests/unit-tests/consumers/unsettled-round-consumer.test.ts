@@ -1,7 +1,7 @@
-import { UnsettledRoundConsumer } from "../../../src/consumers";
 import { stub } from "jest-auto-stub";
-import GameData from "../../../src/game-data";
 import { decrypt } from "sc-game-base/src/core/helpers/crypto-helper";
+import { UnsettledRoundConsumer } from "../../../src/consumers";
+import GameData from "../../../src/game-data";
 import { gameManagementApiClientFactory } from "../global-stubs";
 
 jest.mock("sc-game-base/src/core/helpers/crypto-helper", () => ({

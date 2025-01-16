@@ -1,9 +1,9 @@
 import { stub } from "jest-auto-stub";
 import appConfigs from "../../../src/app-configs";
+import { TOURNAMENT_CODES } from "../../../src/constants";
 import { TournamentConsumer } from "../../../src/consumers";
 import GameData from "../../../src/game-data";
 import { roundsRepository, tournamentRepository } from "../global-stubs";
-import { TOURNAMENT_CODES } from "../../../src/constants";
 
 describe(TournamentConsumer.name, () => {
     let consumer: TournamentConsumer;

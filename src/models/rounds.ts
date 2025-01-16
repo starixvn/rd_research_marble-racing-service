@@ -3,7 +3,7 @@ import { BET_CHOICES, IS_DEV_ENV } from "../constants";
 import { MatchType } from "./tournaments";
 
 export type ResultType = {
-    tournamentId?: mongoose.Types.ObjectId;
+    tournamentId?: mongoose.Schema.Types.ObjectId;
     result: string;
     resultVideoName?: string;
     videoTimeline?: number[];

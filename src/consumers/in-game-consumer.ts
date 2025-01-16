@@ -1,7 +1,7 @@
 import { TableInGameConsumer } from "sc-game-base/src/table/event-consumers";
 import GameData from "../game-data";
-import { getUserBetPercentage } from "../helpers/bet-percentage";
 import GameDefinition from "../game-definition";
+import { getUserBetPercentage } from "../helpers/bet-percentage";
 
 export default class InGameConsumer extends TableInGameConsumer {
     declare gameData: GameData;
@@ -29,21 +29,16 @@ export default class InGameConsumer extends TableInGameConsumer {
 
         if (isStreamingVideo) {
             return {
-                firstHalfVideo: this.gameData.result?.firstHalfVideo,
-                secondHalfVideo: this.gameData.result?.secondHalfVideo,
-                firstHalfTimeline: this.gameData.result?.firstHalfTimeline,
-                secondHalfTimeline: this.gameData.result?.secondHalfTimeline,
-                firstHalf: this.gameData.result?.firstHalf,
-                secondHalf: this.gameData.result?.secondHalf,
+                resultVideoName: this.gameData.result?.resultVideoName,
+                videoTimeline: this.gameData.result?.videoTimeline,
+                result: this.gameData.result?.result,
             };
         }
 
         if (isShowingResult) {
             return {
-                firstHalfTimeline: this.gameData.result?.firstHalfTimeline,
-                secondHalfTimeline: this.gameData.result?.secondHalfTimeline,
-                firstHalf: this.gameData.result?.firstHalf,
-                secondHalf: this.gameData.result?.secondHalf,
+                videoTimeline: this.gameData.result?.videoTimeline,
+                result: this.gameData.result?.result,
             };
         }
 

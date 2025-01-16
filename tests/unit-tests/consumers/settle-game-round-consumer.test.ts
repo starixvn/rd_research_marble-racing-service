@@ -1,6 +1,9 @@
+import { stub } from "jest-auto-stub";
 import { Table } from "sc-game-base";
 import SettleGameRoundConsumer from "../../../src/consumers/settle-game-round-consumer";
 import GameData from "../../../src/game-data";
+import GameDefinition from "../../../src/game-definition";
+import { OddsType } from "../../../src/match-configs";
 import {
     betsRepository,
     endGame,
@@ -11,9 +14,6 @@ import {
     tournamentConsumer,
     userBetResultPublisher,
 } from "../global-stubs";
-import { stub } from "jest-auto-stub";
-import GameDefinition from "../../../src/game-definition";
-import { OddsType } from "../../../src/match-configs";
 
 describe("SettleGameRoundConsumer", () => {
     let settleGameRoundConsumer: SettleGameRoundConsumer;
@@ -65,60 +65,15 @@ describe("SettleGameRoundConsumer", () => {
         });
     });
 
-    describe("updateTournament", () => {
-        it("should call tournamentConsumer.updateMatchResult with the correct argument (homeWins = true)", async () => {
-            // Arrange
-            settleGameRoundConsumer.definition = {
-                settle: jest.fn(() => ({
-                    draw: false,
-                    home: true,
-                })),
-            } as any;
-
-            gameData.result.homeWinsOnDraw = true;
-
-            // Act
-            await settleGameRoundConsumer.updateTournament();
-
-            // Assert
-            expect(settleGameRoundConsumer.definition.settle).toHaveBeenCalledWith(gameData.result);
-            expect(tournamentConsumer.updateMatchResult).toHaveBeenCalledWith(true);
-        });
-
-        it("should call tournamentConsumer.updateMatchResult with the correct argument (homeWins = false)", async () => {
-            // Arrange
-            settleGameRoundConsumer.definition = {
-                settle: jest.fn(() => ({
-                    draw: true,
-                    home: false,
-                })),
-            } as any;
-
-            gameData.result.homeWinsOnDraw = false;
-
-            // Act
-            await settleGameRoundConsumer.updateTournament();
-
-            // Assert
-            expect(settleGameRoundConsumer.definition.settle).toHaveBeenCalledWith(gameData.result);
-            expect(tournamentConsumer.updateMatchResult).toHaveBeenCalledWith(false);
-        });
-    });
 
     describe("calculateBetResult", () => {
         // Common test objects
         const defaultSettlementResult = {
-            home: false,
+            home: true,
             away: false,
-            draw: false,
-            draw4: false,
-            over: false,
-            under: false,
-            odd: false,
-            even: false,
         };
 
-        const odds = { home: 2.0, away: 2.0, draw: 2.0, draw4: 50, over: 2.0, under: 2.0, odd: 2.0, even: 2.0 } as OddsType;
+        const odds = { home: 2.0, away: 2.0 } as OddsType;
 
         it("should calculate bet result correctly for a winning bet", () => {
             // Arrange
@@ -137,8 +92,8 @@ describe("SettleGameRoundConsumer", () => {
 
         it("should calculate bet result correctly for a losing bet", () => {
             // Arrange
-            const settlementResult = { ...defaultSettlementResult, away: true };
-            const bet = { home: 100, freeBet: false };
+            const settlementResult = { ...defaultSettlementResult };
+            const bet = { away: 100, freeBet: false };
 
             // Act
             const result = settleGameRoundConsumer.calculateBetResult(settlementResult, bet, odds);
@@ -162,37 +117,6 @@ describe("SettleGameRoundConsumer", () => {
             expect(result.totalWin).toBe(100);
             expect(result.netWin).toBe(0);
             expect((result.winningByChoices as any).home).toEqual(100);
-        });
-
-        it("should handle draw4 special case correctly", () => {
-            // Arrange
-            const settlementResult = { ...defaultSettlementResult, draw: true, draw4: true };
-            const bet = { draw: 100, freeBet: false };
-
-            // Act
-            const result = settleGameRoundConsumer.calculateBetResult(settlementResult, bet, odds);
-
-            // Assert
-            expect(result.totalBetAmount).toBe(100);
-            expect(result.totalWin).toBe(5000);
-            expect(result.netWin).toBe(4900);
-            expect((result.winningByChoices as any).draw).toEqual(5000);
-        });
-
-        it("should handle multiple bets correctly", () => {
-            // Arrange
-            const settlementResult = { ...defaultSettlementResult, home: true, over: true };
-            const bet = { home: 100, over: 50, freeBet: false };
-
-            // Act
-            const result = settleGameRoundConsumer.calculateBetResult(settlementResult, bet, odds);
-
-            // Assert
-            expect(result.totalBetAmount).toBe(150);
-            expect(result.totalWin).toBe(300);
-            expect(result.netWin).toBe(150);
-            expect((result.winningByChoices as any).home).toEqual(200);
-            expect((result.winningByChoices as any).over).toEqual(100);
         });
 
         it("should round results to 2 decimal places", () => {

@@ -1,10 +1,10 @@
 import { stub } from "jest-auto-stub";
 import { TableInGameConsumer } from "sc-game-base/src/table/event-consumers";
-import GameData from "../../../src/game-data";
 import { InGameConsumer } from "../../../src/consumers";
+import GameData from "../../../src/game-data";
 import GameDefinition from "../../../src/game-definition";
-import { gameManagementApiClientFactory, publisher, roundQuery } from "../global-stubs";
 import * as helper from "../../../src/helpers/bet-percentage";
+import { gameManagementApiClientFactory, publisher, roundQuery } from "../global-stubs";
 
 describe("InGameConsumer test", () => {
     let consumer: InGameConsumer;
@@ -29,19 +29,14 @@ describe("InGameConsumer test", () => {
 
     describe("getCurrentVideoResult", () => {
         const fullVideoResult = {
-            firstHalfVideo: "video1.mp4",
-            secondHalfVideo: "video2.mp4",
-            firstHalfTimeline: [1, 2, 3],
-            secondHalfTimeline: [4, 5, 6],
-            firstHalf: "AH",
-            secondHalf: "HA",
+            resultVideoName: "video1.mp4",
+            videoTimeline: [1, 2, 3, 4, 5, 6],
+            result: "AHHHAA"
         };
 
         const timelineResult = {
-            firstHalfTimeline: [1, 2, 3],
-            secondHalfTimeline: [4, 5, 6],
-            firstHalf: "AH",
-            secondHalf: "HA",
+            videoTimeline: [1, 2, 3, 4, 5, 6],
+            result: "AHHHAA"
         };
 
         beforeEach(() => {
@@ -92,14 +87,11 @@ describe("InGameConsumer test", () => {
             const realPlayer = { id: "player1" };
             const basePayload = { some: "payload" };
             const playerBetCount = { home: ["111", "113"], away: ["112"] };
-            const userBetPercentage = { home: 66, away: 34, draw: 0 };
+            const userBetPercentage = { home: 66, away: 34 };
             const videoResult = {
-                firstHalfVideo: "video1.mp4",
-                secondHalfVideo: "video2.mp4",
-                firstHalfTimeline: [],
-                secondHalfTimeline: [],
-                firstHalf: "AH",
-                secondHalf: "HA",
+                resultVideoName: "video1.mp4",
+                videoTimeline: [],
+                result: "AHHHAA",
             };
 
             gameData.publishedTournament = {} as any;

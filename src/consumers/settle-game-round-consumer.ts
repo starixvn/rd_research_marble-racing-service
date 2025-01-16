@@ -1,9 +1,8 @@
 import { Table } from "sc-game-base";
 import GameData from "../game-data";
-import type TournamentConsumer from "./tournament-consumer";
-import { SettlementResultType } from "../models/rounds";
 import { OddsType } from "../match-configs";
-import { BET_CHOICES } from "../constants";
+import { SettlementResultType } from "../models/rounds";
+import type TournamentConsumer from "./tournament-consumer";
 
 export default class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGameRoundConsumer {
     declare gameData: GameData;
@@ -22,7 +21,7 @@ export default class SettleGameRoundConsumer extends Table.EventConsumers.TableS
 
     async updateTournament() {
         const settlementResult = this.definition.settle(this.gameData.result);
-        const homeWins = settlementResult.draw ? this.gameData.result.homeWinsOnDraw : settlementResult.home;
+        const homeWins = settlementResult.home;
 
         await this.tournamentConsumer.updateMatchResult(homeWins);
     }
@@ -32,10 +31,6 @@ export default class SettleGameRoundConsumer extends Table.EventConsumers.TableS
             (result, [choice, win]) => {
                 const betAmount = bet[choice] ?? 0;
                 let originalOdds = (odds as any)[choice] || 1;
-
-                if (choice === BET_CHOICES.draw && settlementResult.draw4) {
-                    originalOdds = odds.draw4;
-                }
 
                 const effectiveOdds = bet.freeBet ? originalOdds - 1 : originalOdds;
                 const winAmount = win ? betAmount * effectiveOdds : 0;

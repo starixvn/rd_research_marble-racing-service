@@ -1,5 +1,5 @@
-import { tournaments } from "../../../src/models";
 import { mongo } from "mongoose";
+import { tournaments } from "../../../src/models";
 
 describe("Tournament", () => {
     describe("when create the new instance of Tournament", () => {

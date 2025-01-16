@@ -1,7 +1,7 @@
-import UserDisconnectConsumer from "../../../src/consumers/user-disconnect-consumer";
-import { Socket } from "socket.io";
-import { Core } from "sc-game-base";
 import { stub } from "jest-auto-stub";
+import { Core } from "sc-game-base";
+import { Socket } from "socket.io";
+import UserDisconnectConsumer from "../../../src/consumers/user-disconnect-consumer";
 import GameData from "../../../src/game-data";
 
 describe("UserDisconnectConsumer", () => {
