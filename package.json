@@ -12,7 +12,7 @@
     "type": "module",
     "scripts": {
         "build": "tsc -p tsconfig.build.json",
-        "test": "jest --testPathPattern=tests/unit-tests/crons/ ",
+        "test": "jest --testPathPattern=tests/unit-tests/ ",
         "test-coverage": "jest --collect-coverage --testPathPattern=tests/unit-tests/",
         "integration-test": "npm run build && jest --config ./jest.integration-test.config.cjs --testPathPattern=tests/integration-tests/ --detectOpenHandles --forceExit",
         "dev": "cross-env NODE_ENV=development tsx watch ./src/app.ts",

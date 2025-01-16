@@ -1,5 +1,5 @@
-import gameSettings from "../../src/game-settings";
 import { BET_CHOICES } from "../../src/constants";
+import gameSettings from "../../src/game-settings";
 
 describe("gameSettings", () => {
     it("should have the correct id", () => {
@@ -27,14 +27,12 @@ describe("gameSettings", () => {
     });
 
     it("should have the correct choicesMapper", () => {
-        expect(gameSettings.choicesMapper).toEqual({ home: 1, away: 2, draw: 3, over: 4, under: 5, odd: 6, even: 7 });
+        expect(gameSettings.choicesMapper).toEqual({ home: 1, away: 2, });
     });
 
     it("should have the correct hedgeBetGroups", () => {
         expect(gameSettings.hedgeBetGroups).toEqual([
             [BET_CHOICES.home, BET_CHOICES.away],
-            [BET_CHOICES.over, BET_CHOICES.under],
-            [BET_CHOICES.odd, BET_CHOICES.even],
         ]);
     });
 
@@ -54,7 +52,6 @@ describe("gameSettings", () => {
         expect(gameSettings.botSettings).toEqual({
             ratio: { mainOpts: 80, subOpts: 20 },
             mainOpts: [BET_CHOICES.home, BET_CHOICES.away],
-            subOpts: [BET_CHOICES.over, BET_CHOICES.under, BET_CHOICES.odd, BET_CHOICES.even, BET_CHOICES.draw],
         });
     });
 });
