@@ -2,7 +2,7 @@ import Chance from "chance";
 import crypto from "crypto";
 import { NUMBER_OF_MARBLES, NUMBER_OF_VIDEOS, NUMBER_OF_WINNER_MARLBE as NUMBER_OF_WINNER_MARBLES } from "../constants";
 import { ResultType, SettlementResultType } from "../models/rounds";
-import { getRandomIndexFromArray } from "./random-helper";
+import { shuffle } from "./shuffle";
 
 export const generateResult = (): ResultType => {
 
@@ -66,13 +66,7 @@ export const generateVideoName = (result: string, videoDefault = false, ignoredV
 function generateRacingLapResult(numberOfMarbles: number) {
     // init the array
     const marblePool = Array.from(Array(numberOfMarbles).keys());
-    const resultPool: number[] =[];
-    // pick a random ball from array
-    loop(numberOfMarbles, () => {
-        const index = getRandomIndexFromArray(1, marblePool.length);
-        resultPool.push(marblePool[index]);
-        marblePool.splice(index, 1);
-    });
+    const resultPool = shuffle(shuffle(marblePool));
 
     return resultPool.join("");
 }
