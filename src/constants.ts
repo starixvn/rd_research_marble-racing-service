@@ -10,7 +10,7 @@ export const IS_DEV_ENV = process.env.NODE_ENV === "development";
 export const POOL_SIZE = 10_000;
 
 export const NUMBER_OF_MARBLES = 6;
-export const NUMBER_OF_WINNER_MARLBE = 3;
+export const NUMBER_OF_WINNER_MARBLES = 3;
 
 export const NUMBER_OF_VIDEOS: Record<string, number> = {
     AAAA: 9,

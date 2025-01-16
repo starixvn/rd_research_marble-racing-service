@@ -1,11 +1,10 @@
 import Chance from "chance";
 import crypto from "crypto";
-import { NUMBER_OF_MARBLES, NUMBER_OF_VIDEOS, NUMBER_OF_WINNER_MARLBE as NUMBER_OF_WINNER_MARBLES } from "../constants";
+import { NUMBER_OF_MARBLES, NUMBER_OF_VIDEOS, NUMBER_OF_WINNER_MARBLES } from "../constants";
 import { ResultType, SettlementResultType } from "../models/rounds";
 import { shuffle } from "./shuffle";
 
 export const generateResult = (): ResultType => {
-
     const result = generateRacingLapResult(NUMBER_OF_MARBLES);
     const videoInfo = getVideoInfoFromResult(result);
 
@@ -31,7 +30,7 @@ export const getSettlementResult = (roundResult: ResultType): SettlementResultTy
         .slice(0, NUMBER_OF_WINNER_MARBLES)
         .split("");
 
-    const homeWinCount = winningMarbles.filter(item => Number(item) % 2 !== 0).length;
+    const homeWinCount = winningMarbles.filter(item => item === "H").length;
     const awayWinCount = winningMarbles.length - homeWinCount;
 
     return {
@@ -68,11 +67,17 @@ function generateRacingLapResult(numberOfMarbles: number) {
     const marblePool = Array.from(Array(numberOfMarbles).keys());
     const resultPool = shuffle(shuffle(marblePool));
 
-    return resultPool.join("");
+    return mapResultWithHomeAwayResult(resultPool);
 }
 
-function loop(loopCount: number, callback: Function) {
-    for (let i = 0; i < loopCount; i++) {
-        callback();
-    }
+function mapResultWithHomeAwayResult(result: number[]) {
+    return result
+        .map(item => getMarbleTeamBasedOnPosition(item))
+        .join("");
+}
+
+function getMarbleTeamBasedOnPosition(marble: number) {
+    return marble % 2 == 0
+        ? "H"
+        : "A";
 }

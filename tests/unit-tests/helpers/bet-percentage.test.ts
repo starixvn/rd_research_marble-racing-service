@@ -1,17 +1,15 @@
-import { betPercentage } from "../../../src/helpers";
 import { BET_CHOICES } from "../../../src/constants";
+import { betPercentage } from "../../../src/helpers";
 
 describe("betPercentage", () => {
     describe("calculateUserBetPercentage", () => {
-        const betChoices = ["home", "draw", "away"];
+        const betChoices = ["home", "away"];
 
         it("should calculate the correct percentages for each choice of specific choices", () => {
             // Arrange
             const playerBetCount = {
                 [BET_CHOICES.home]: ["player1", "player2"],
                 [BET_CHOICES.away]: ["player3"],
-                [BET_CHOICES.over]: ["player4"],
-                [BET_CHOICES.under]: ["player5"],
             };
 
             // Act
@@ -19,7 +17,6 @@ describe("betPercentage", () => {
 
             // Assert
             expect(result[BET_CHOICES.home]).toBe(67);
-            expect(result[BET_CHOICES.draw]).toBe(0);
             expect(result[BET_CHOICES.away]).toBe(33);
         });
 
@@ -33,7 +30,6 @@ describe("betPercentage", () => {
             // Assert
             expect(result).toEqual({
                 home: 0,
-                draw: 0,
                 away: 0,
             });
         });
@@ -51,7 +47,6 @@ describe("betPercentage", () => {
             // Assert
             expect(result[BET_CHOICES.home]).toBe(0);
             expect(result[BET_CHOICES.away]).toBe(0);
-            expect(result[BET_CHOICES.draw]).toBe(0);
         });
     });
 
@@ -60,7 +55,6 @@ describe("betPercentage", () => {
             // Arrange
             const playerBetCount = {
                 home: ["user1", "user2"],
-                draw: ["user3"],
                 away: ["user4", "user5", "user6"],
             };
 
@@ -69,9 +63,8 @@ describe("betPercentage", () => {
 
             // Assert
             expect(result).toEqual({
-                home: 33,
-                draw: 17,
-                away: 50,
+                home: 40,
+                away: 60,
             });
         });
 
@@ -85,7 +78,6 @@ describe("betPercentage", () => {
             // Assert
             expect(result).toEqual({
                 home: 0,
-                draw: 0,
                 away: 0,
             });
         });
@@ -102,7 +94,6 @@ describe("betPercentage", () => {
             // Assert
             expect(result).toEqual({
                 home: 100,
-                draw: 0,
                 away: 0,
             });
         });

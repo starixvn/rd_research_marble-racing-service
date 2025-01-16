@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import { resultHelper } from "../../../src/helpers";
-import { HalfConfigType } from "../../../src/match-configs";
 import { ResultType } from "../../../src/models/rounds";
 
 jest.mock("chance", () => {
@@ -23,10 +22,12 @@ jest.mock("../../../src/helpers/random-helper", () => ({
 
 jest.mock("../../../src/constants", () => ({
     NUMBER_OF_VIDEOS: {
-        HAA: 1,
-        AHH: 2,
+        HHAAAH: 1,
+        HAAAHA: 2,
     },
     POOL_SIZE: 10_000,
+    NUMBER_OF_MARBLES: 6,
+    NUMBER_OF_WINNER_MARBLES: 3
 }));
 
 describe("Result Helper", () => {
@@ -35,119 +36,77 @@ describe("Result Helper", () => {
     });
 
     describe("generateResult", () => {
-        it("should generate a result based on match configuration", () => {
+        it("should generate random racing result sequence", () => {
             // Act
             const result = resultHelper.generateResult();
-
             // Assert
-            expect(result.result).toBeDefined();
+            expect(result.result).toBe("HAHAHA");
             expect(result.resultVideoName).toBeDefined();
-        });
-
-        it("should use provided pool if available", () => {
-            // Arrange
-            const pool = ["1-0"];
-
-            // Act
-            const result = resultHelper.generateResult({ randomMode: 1, pool });
-            // Assert
-            expect(result.firstHalf).toBe("H");
-            expect(result.secondHalf).toBe("H");
         });
     });
 
     describe("getSettlementResult", () => {
         it("should calculate settlement result based on round result", () => {
             const roundResult: ResultType = {
-                firstHalf: "HH",
-                secondHalf: "AA",
-                overUnderValue: 3.5,
-                firstHalfVideo: "http://marble-football/watch?v=HH",
-                secondHalfVideo: "http://marble-football/watch?v=AA",
-                homeWinsOnDraw: false,
-                penalty: { home: 0, away: 0 },
+                result: "HHAAHA",
+                resultVideoName: "http://marble-football/watch?v=HHAAHA",
             };
 
             const settlementResult = resultHelper.getSettlementResult(roundResult);
 
-            expect(settlementResult.home).toBe(false);
+            expect(settlementResult.home).toBe(true);
             expect(settlementResult.away).toBe(false);
-            expect(settlementResult.draw).toBe(true);
-            expect(settlementResult.over).toBe(true);
-            expect(settlementResult.under).toBe(false);
-            expect(settlementResult.odd).toBe(false);
-            expect(settlementResult.even).toBe(true);
-            expect(settlementResult.draw4).toBe(false);
         });
     });
 
     describe("generateResultFromAdminRawResult", () => {
         it("should generate a result from admin raw result", () => {
             const roundResult = {
-                firstHalf: "HAAA",
-                secondHalf: "AHHH",
-                homeWinsOnDraw: false,
+                result: "HAHAHA"
             } as ResultType;
 
             const result = resultHelper.generateResultFromAdminRawResult(roundResult);
 
-            expect(result.firstHalf).toBe("HAAA");
-            expect(result.secondHalf).toBe("AHHH");
-            expect(result.overUnderValue).toBe(4.5);
-            expect(result.homeWinsOnDraw).toBe(false);
-            expect(result.firstHalfVideo).toBeDefined();
-            expect(result.secondHalfVideo).toBeDefined();
-            expect(result.penalty).toBeDefined();
-        });
-
-        it("should handle empty results", () => {
-            const roundResult = {
-                homeWinsOnDraw: true,
-            } as ResultType;
-
-            const result = resultHelper.generateResultFromAdminRawResult(roundResult);
-
-            expect(result.firstHalf).toBe("0");
-            expect(result.secondHalf).toBe("0");
+            expect(result.result).toBe("HAHAHA");
         });
     });
 
+
     describe("generateVideoName", () => {
         it("should generate a video name based on result", () => {
-            const result = "HAA";
+            const result = "HHAAAH";
             const videoName = resultHelper.generateVideoName(result);
             const expectedVideoName = crypto.createHash("sha256").update(`${result}-0`).digest("hex");
             expect(videoName).toBe(expectedVideoName);
         });
 
         it("should generate different video name when ignored video matches and number of videos is bigger than 1", () => {
-            const result = "AHH";
+            const result = "HAAAHA";
             const ignoredVideo = resultHelper.generateVideoName(result);
             const newVideo = resultHelper.generateVideoName(result, false, ignoredVideo);
             expect(newVideo).not.toBe(ignoredVideo);
         });
 
         it("should generate same video name when ignored video matches but number of videos is 1", () => {
-            const result = "HAA";
+            const result = "HHAAAH";
             const ignoredVideo = resultHelper.generateVideoName(result);
             const newVideo = resultHelper.generateVideoName(result, false, ignoredVideo);
             expect(newVideo).toBe(ignoredVideo);
         });
     });
 
-    describe("createScorePool", () => {
-        it("should create a pool of scores based on config", () => {
-            const config: HalfConfigType = {
-                scoreRate: {
-                    "1-0": 0.5,
-                    "0-1": 0.5,
-                },
-            };
+    // describe("createScorePool", () => {
+    //     it("should create a pool of scores based on config", () => {
+    //         const config: HalfConfigType = {
+    //             scoreRate: {
+    //                 "1-0": 0.5,
+    //                 "0-1": 0.5,
+    //             },
+    //         };
 
-            const pool = resultHelper.createScorePool(config, 100);
-            expect(pool).toHaveLength(100);
-            expect(pool.filter((score) => score === "1-0").length).toBe(50);
-            expect(pool.filter((score) => score === "0-1").length).toBe(50);
-        });
-    });
+    //         const pool = resultHelper.createScorePool(config, 100);
+    //         expect(pool).toHaveLength(100);
+    //         expect(pool.filter((score) => score === "1-0").length).toBe(50);
+    //         expect(pool.filter((score) => score === "0-1").length).toBe(50);
+    //     });
 });
