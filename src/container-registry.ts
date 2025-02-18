@@ -16,6 +16,7 @@ import { RunningRoundInfoPublisher } from "./publishers";
 import TestPublisher from "./publishers/test-publisher";
 import { HistoryQuery } from "./query-apis";
 import SocketRouter from "./router/socket-router";
+import { PlaceBetConsumer } from "sc-game-base/src/core/event-consumers";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     register(appConfigs: any, definition: any, gameData: any): AwilixContainer<any> {
@@ -57,7 +58,8 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             roundResultConsumer: asClass(RoundResultConsumer).singleton().proxy(),
             unsettledRoundConsumer: asClass(UnsettledRoundConsumer).singleton().proxy(),
             settleGameRoundConsumer: asClass(SettleGameRoundConsumer).singleton().proxy(),
-            testConsumer: asClass(TestConsumer).singleton().proxy()
+            testConsumer: asClass(TestConsumer).singleton().proxy(),
+            placeBetConsumer: asClass(PlaceBetConsumer).singleton(),
         });
     }
 

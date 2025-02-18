@@ -66,7 +66,6 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
             playerInGame.betTracks[betChoice] = (playerInGame.betTracks[betChoice] ?? 0) + payload.amount;
         }
 
-        
         this.gameData.ingame[name].betQueue.push({ player, payload });
         this._gameStateManager.ingame[name].betQueue.push({ player, payload});
     }
