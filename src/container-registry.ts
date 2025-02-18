@@ -7,6 +7,7 @@ import {
     TournamentConsumer,
     UnsettledRoundConsumer,
     UserDisconnectConsumer,
+    PlaceBetConsumer as ManagedPlaceBetConsumer
 } from "./consumers";
 
 import TestConsumer from "./consumers/test-consumer";
@@ -17,11 +18,14 @@ import TestPublisher from "./publishers/test-publisher";
 import { HistoryQuery } from "./query-apis";
 import SocketRouter from "./router/socket-router";
 import { PlaceBetConsumer } from "sc-game-base/src/core/event-consumers";
+import { GameStateManager } from "./game-state";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     register(appConfigs: any, definition: any, gameData: any): AwilixContainer<any> {
         super.register(appConfigs, definition, gameData);
-
+        this.container.register({
+            gameStateManager: asClass(GameStateManager).singleton()
+        });
         return this.container;
     }
 
@@ -59,7 +63,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             unsettledRoundConsumer: asClass(UnsettledRoundConsumer).singleton().proxy(),
             settleGameRoundConsumer: asClass(SettleGameRoundConsumer).singleton().proxy(),
             testConsumer: asClass(TestConsumer).singleton().proxy(),
-            placeBetConsumer: asClass(PlaceBetConsumer).singleton(),
+            placeBetConsumer: asClass(ManagedPlaceBetConsumer).singleton(),
         });
     }
 

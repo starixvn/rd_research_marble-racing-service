@@ -18,8 +18,16 @@ type BetQueueItem = {
 type BetChoice = string;
 type PlayerId = string;
 
-export class Player {
+class ManagedBetQueue {
+    private _betQueue: Array<BetQueueItem> = []
 
+    public push(betQueueItem: BetQueueItem) {
+        console.log("here we go, ", betQueueItem.payload)
+        this._betQueue.push(betQueueItem);
+    }
+}
+
+export class Player {
     private _name: string;
     private _currency: string;
     private _system: string;
@@ -27,7 +35,7 @@ export class Player {
     private _operatorId: string;
 
     private _betTrack: Map<BetChoice, number> = new Map();
-    private _betQueue: Array<BetQueueItem> = []
+    private _betQueue: ManagedBetQueue = new ManagedBetQueue();
     constructor({
         name,
         clientSeed,

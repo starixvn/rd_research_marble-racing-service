@@ -17,6 +17,8 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
     private _gameStateManager: GameStateManager;
 
     override consume(player: any, payload: any): void {
+        console.log("Place bet");
+
         Object.assign(payload, {
             amount: payload.amount >> 0,
             freeBet: payload.freeBet ?? false,

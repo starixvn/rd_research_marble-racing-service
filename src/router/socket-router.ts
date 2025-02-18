@@ -1,5 +1,5 @@
 import { logger } from "sc-common";
-import { PlaceBetConsumer, UserSignInConsumer } from "sc-game-base/src/core/event-consumers";
+import { UserSignInConsumer } from "sc-game-base/src/core/event-consumers";
 import { UserSignInPublisher } from "sc-game-base/src/core/event-publishers";
 import { RoundQuery } from "sc-game-base/src/core/query-apis";
 import { BaseSocketRouter } from "sc-game-base/src/core/routers";
@@ -10,6 +10,7 @@ import TestConsumer from "../consumers/test-consumer";
 import GameData from "../game-data";
 import GameDefinition from "../game-definition";
 import { HistoryQuery } from "../query-apis";
+import PlaceBetConsumer from "../consumers/place-bet-consumer";
 export default class SocketRouter extends BaseSocketRouter {
 
     testConsumer: TestConsumer;
