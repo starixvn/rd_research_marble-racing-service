@@ -22,13 +22,22 @@ class ManagedBetQueue {
     private _betQueue: Array<BetQueueItem> = []
 
     public push(betQueueItem: BetQueueItem) {
-        console.log("here we go, ", betQueueItem.payload)
         this._betQueue.push(betQueueItem);
+    }
+
+    public shift() {
+        console.log("dequeued bet")
+        const shiftedItem = this._betQueue.shift();
+        return shiftedItem
+    }
+
+    public get length() {
+        return this._betQueue.length;
     }
 }
 
 class ManagedBetTrack {
-    private _betTracks: Record<string, number> = {};
+    private _betTracks: Record<BetChoice, number> = {};
 
     public get(key: string) {
         return this._betTracks[key];
@@ -55,6 +64,8 @@ export class Player {
     private _clientSeed: string;
     private _operatorId: string;
 
+    private _betProcessing: boolean = false;
+
     private _betTracks: ManagedBetTrack = new ManagedBetTrack();
     private _betQueue: ManagedBetQueue = new ManagedBetQueue();
     constructor({
@@ -77,6 +88,14 @@ export class Player {
 
     public get betTracks() {
         return this._betTracks;
+    }
+
+    public get betProcessing() {
+        return this._betProcessing;
+    }
+
+    public set betProcessing(value: boolean) {
+        this._betProcessing = value;
     }
 }
 
