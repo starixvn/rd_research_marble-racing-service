@@ -27,6 +27,27 @@ class ManagedBetQueue {
     }
 }
 
+class ManagedBetTrack {
+    private _betTracks: Record<string, number> = {};
+
+    public get(key: string) {
+        return this._betTracks[key];
+    }
+
+    public set(key: string, value: number) {
+        console.log(`Bet track of  ${key} is set from ${this._betTracks[key]} to ${value}`)
+        this._betTracks[key] = value;
+    }
+
+    public keys() {
+        return Object.keys(this._betTracks);
+    }
+}
+
+export type BetTracks = {
+    [betChoice: string]: number
+}
+
 export class Player {
     private _name: string;
     private _currency: string;
@@ -34,7 +55,7 @@ export class Player {
     private _clientSeed: string;
     private _operatorId: string;
 
-    private _betTrack: Map<BetChoice, number> = new Map();
+    private _betTracks: ManagedBetTrack = new ManagedBetTrack();
     private _betQueue: ManagedBetQueue = new ManagedBetQueue();
     constructor({
         name,
@@ -54,8 +75,8 @@ export class Player {
         return this._betQueue;
     }
 
-    public get betTrack() {
-        return this._betTrack;
+    public get betTracks() {
+        return this._betTracks;
     }
 }
 
@@ -70,5 +91,9 @@ export class GameStateManager {
 
     public get ingame() {
         return this._inGamePlayerDataMap;
+    }
+
+    public set ingame(value: InGamePlayerDataMapType) {
+        this._inGamePlayerDataMap = value;
     }
 }

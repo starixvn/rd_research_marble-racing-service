@@ -8,11 +8,13 @@ import GameDefinition from "../game-definition";
 import { retry } from "../helpers";
 import { generateVideoName } from "../helpers/result-helper";
 import defaultVideoTimelines from "../timelines/video-timelines";
+import { GameStateManager } from "../game-state";
 
 export default class GameCron extends Table.Crons.TableGameCron {
     declare gameData: GameData;
     declare definition: GameDefinition;
     declare appConfigs: typeof AppConfigs;
+    declare gameStateManager: GameStateManager;
 
     tournamentConsumer: TournamentConsumer;
 
@@ -21,6 +23,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
         this.gameData.liveStreamServer = this.appConfigs.liveStreamServer;
         this.tournamentConsumer = container.tournamentConsumer;
+        this.gameStateManager = container.gameStateManager;
     }
 
     async queryLastResult() {
@@ -32,6 +35,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
     override resetForNewRound() {
         super.resetForNewRound();
         this.gameData.playerBetCount = {};
+        this.gameStateManager.ingame = {}
     }
 
     async getVideoTimeline(videoName: string) {

@@ -17,7 +17,6 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
     private _gameStateManager: GameStateManager;
 
     override consume(player: any, payload: any): void {
-        console.log("Place bet");
 
         Object.assign(payload, {
             amount: payload.amount >> 0,
@@ -48,6 +47,28 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
             this.gameData.ingame[name] = newPlayer;
         }
 
+        this.upsertPlayerToManagedGameData(player, payload);
+
+        this.adjustBetTracks(player.profile.name, payload);
+        this.adjustManagedBetTrack(player.profile.name, payload);
+  
+        this.gameData.ingame[name].betQueue.push({ player, payload });
+        this._gameStateManager.ingame[name].betQueue.push({ player, payload});
+    }
+
+    adjustManagedBetTrack(name: string, bet: any) {
+        const { betChoice, amount } = bet;
+        if (this._gameStateManager.ingame?.[name]) {
+            const playerInGame = this._gameStateManager.ingame[name];
+
+            playerInGame.betTracks.set(betChoice, (playerInGame.betTracks.get(betChoice) ?? 0) + amount);
+        }
+
+    }
+
+    upsertPlayerToManagedGameData(player: any, payload: any) {
+        const name = player.profile.name;
+
         if (!this._gameStateManager.ingame[name]) {
             const newPlayer = new Player({
                 clientSeed: (payload.clientSeed) as string,
@@ -59,16 +80,5 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
 
             this._gameStateManager.ingame[name] = newPlayer;
         }
-
-        this.adjustBetTracks(player.profile.name, payload);
-
-        if (this._gameStateManager.ingame?.[name]) {
-            const playerInGame = this.gameData.ingame[name];
-
-            playerInGame.betTracks[betChoice] = (playerInGame.betTracks[betChoice] ?? 0) + payload.amount;
-        }
-
-        this.gameData.ingame[name].betQueue.push({ player, payload });
-        this._gameStateManager.ingame[name].betQueue.push({ player, payload});
     }
 }
