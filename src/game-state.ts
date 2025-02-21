@@ -1,19 +1,43 @@
+export interface Player {
+    UID: string;
+    session: Session;
+    profile: {
+        name: string;
+        minBet: number;
+        maxBet: number;
+    }
+}
+
+export interface Session {
+    currencyId: string;
+    currencyName: string;
+    system: string;
+    operatorId: string;
+    currencyCode: string;
+    multiplier: number;
+}
+
+export interface Payload {
+    amount: number;
+    freeBet: boolean;
+    roundId: number;
+    m: string;
+    receivedTime: Date;
+    betChoice: string;
+    clientSeed: string;
+}
+
 export interface PlayerConstructorProps {
     name: string;
     currency: string;
     system: string;
-    // betTracks: Map<string, number>;
-    // betQueue: Array<{
-    //     player: any,
-    //     payload: any
-    // }>;
 
     clientSeed: string;
     operatorId: string;
 } 
 type BetQueueItem = {
-    player: any,
-    payload: any
+    player: Player,
+    payload: Payload
 }
 type BetChoice = string;
 type PlayerId = string;
@@ -57,7 +81,7 @@ export type BetTracks = {
     [betChoice: string]: number
 }
 
-export class Player {
+export class PlayerInGame {
     private _name: string;
     private _currency: string;
     private _system: string;
@@ -100,11 +124,33 @@ export class Player {
 }
 
 type InGamePlayerDataMapType = {
-    [playerId: PlayerId]: Player
+    [playerId: PlayerId]: PlayerInGame
+}
+
+type ExchangeRateConfigList = {
+    code?: Record<string, any>;
+    exId?: string;
+    _id?: string;
+}
+
+interface Currency {
+    partnerId: string;
+    name: string;
+    code: string;
+    multiplier: number;
+    enabled: boolean;
+    isTest: boolean;
+    groupId: string;
+    isUncountOnTotal: boolean;
 }
 
 export class GameStateManager {
     private _inGamePlayerDataMap: InGamePlayerDataMapType = {}
+    private _exchangeRates: ExchangeRateConfigList  = {}
+    private _currencies: Currency[] = []
+    private _currencyGroupGames: object[] = []
+    private _partnerGameSiteExclusions: object[] = []
+    private _currencyGroups: object[] = []
 
     constructor() {}
 
@@ -114,5 +160,45 @@ export class GameStateManager {
 
     public set ingame(value: InGamePlayerDataMapType) {
         this._inGamePlayerDataMap = value;
+    }
+
+    public get exchangeRates() {
+        return this._exchangeRates;
+    }
+
+    public set exchangeRates(value: ExchangeRateConfigList) {
+        this._exchangeRates = value;
+    }
+
+    public get currencies() {
+        return this._currencies;
+    }
+
+    public set currencies(value: Currency[]) {
+        this._currencies = value;
+    }
+
+    public set currencyGroupGames(value: object[]) {
+        this._currencyGroupGames = value;
+    }
+
+    public get currencyGroupGames() {
+        return this._currencyGroupGames;
+    }
+
+    public get partnerGameSiteExclusions() {
+        return this._partnerGameSiteExclusions;
+    }
+
+    public set partnerGameSiteExclusions(value: object[]) {
+        this._partnerGameSiteExclusions = value;
+    }
+
+    public get currencyGroups() {
+        return this._currencyGroups;
+    }
+
+    public set currencyGroups(value: object[]) {
+        this._currencyGroups = value;
     }
 }

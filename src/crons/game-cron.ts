@@ -9,6 +9,7 @@ import { retry } from "../helpers";
 import { generateVideoName } from "../helpers/result-helper";
 import defaultVideoTimelines from "../timelines/video-timelines";
 import { GameStateManager } from "../game-state";
+import { getOrDefault } from "sc-game-base/src/core/game-management-api"
 
 export default class GameCron extends Table.Crons.TableGameCron {
     declare gameData: GameData;
@@ -158,5 +159,31 @@ export default class GameCron extends Table.Crons.TableGameCron {
         const { placingBets, lockingBet } = this.definition.durations;
 
         return remainingTime < placingBets && remainingTime > lockingBet;
+    }
+
+    async updateExchangeRates(): Promise<void> {
+        super.updateExchangeRates();
+        this.gameStateManager.exchangeRates = await getOrDefault(
+            this.gameManagementApiClient.exchangeRates.getExchangeRates(),
+            this.gameStateManager.exchangeRates
+        );
+    }
+
+    async getSettingForNewRound(): Promise<void> {
+        super.getSettingForNewRound();
+        const data = await getOrDefault(
+            this.gameManagementApiClient.aggregation.getSettingForNewRound(this.definition.id),
+            {
+                currencyGroupGames: this.gameStateManager.currencyGroupGames,
+                currencies: this.gameStateManager.currencies,
+                partnerGameSiteExclusions: this.gameStateManager.partnerGameSiteExclusions,
+                currencyGroups: this.gameStateManager.currencyGroups
+            }
+        );
+
+        this.gameStateManager.currencyGroupGames = data.currencyGroupGames;
+        this.gameStateManager.currencies = data.currencies;
+        this.gameStateManager.partnerGameSiteExclusions = data.partnerGameSiteExclusions;
+        this.gameStateManager.currencyGroups = data.currencyGroups;
     }
 }

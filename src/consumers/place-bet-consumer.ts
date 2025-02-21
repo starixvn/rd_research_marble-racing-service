@@ -1,7 +1,11 @@
 import { Core } from "sc-game-base";
 import {  GameData, GameDefinition } from "sc-game-base/src/core";
 import { BaseEventPublisher } from "sc-game-base/src/core/event-publishers";
-import { GameStateManager, Player } from "../game-state";
+import { GameStateManager, Payload, Player, PlayerInGame } from "../game-state";
+
+
+
+
 export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetConsumer {
     /**
      * @param {GameDefinition} definition
@@ -16,7 +20,7 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
 
     private _gameStateManager: GameStateManager;
 
-    override consume(player: any, payload: any): void {
+    override consume(player: Player, payload: Payload): void {
 
         Object.assign(payload, {
             amount: payload.amount >> 0,
@@ -56,7 +60,7 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
         this._gameStateManager.ingame[name].betQueue.push({ player, payload});
     }
 
-    adjustManagedBetTrack(name: string, bet: any) {
+    adjustManagedBetTrack(name: string, bet: Payload) {
         const { betChoice, amount } = bet;
         if (this._gameStateManager.ingame?.[name]) {
             const playerInGame = this._gameStateManager.ingame[name];
@@ -70,7 +74,7 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
         const name = player.profile.name;
 
         if (!this._gameStateManager.ingame[name]) {
-            const newPlayer = new Player({
+            const newPlayer = new PlayerInGame({
                 clientSeed: (payload.clientSeed) as string,
                 currency: (player.session.currencyName) as string,
                 name: player.profile.name as string,
