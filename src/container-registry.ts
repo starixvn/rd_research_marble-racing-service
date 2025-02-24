@@ -17,15 +17,19 @@ import { RunningRoundInfoPublisher } from "./publishers";
 import TestPublisher from "./publishers/test-publisher";
 import { HistoryQuery } from "./query-apis";
 import SocketRouter from "./router/socket-router";
-import { PlaceBetConsumer } from "sc-game-base/src/core/event-consumers";
 import { GameStateManager } from "./game-state";
+import RoundIdConsumer from "./consumers/round-id-consumer";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     register(appConfigs: any, definition: any, gameData: any): AwilixContainer<any> {
         super.register(appConfigs, definition, gameData);
         this.container.register({
-            gameStateManager: asClass(GameStateManager).singleton()
+            gameStateManager: asClass(GameStateManager).singleton(),
+            roundIdConsumer: asClass(RoundIdConsumer).singleton()
         });
+        this.container.register({
+            
+        })
         return this.container;
     }
 

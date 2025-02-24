@@ -1,3 +1,8 @@
+import { RealPlayer } from "./game-data";
+import { ResultType } from "./models/rounds";
+import { ITournament } from "./models/tournaments";
+
+
 export interface Player {
     UID: string;
     session: Session;
@@ -92,6 +97,8 @@ export class PlayerInGame {
 
     private _betTracks: ManagedBetTrack = new ManagedBetTrack();
     private _betQueue: ManagedBetQueue = new ManagedBetQueue();
+    private _ownBets: Record<string, number> = {}
+
     constructor({
         name,
         clientSeed,
@@ -121,9 +128,17 @@ export class PlayerInGame {
     public set betProcessing(value: boolean) {
         this._betProcessing = value;
     }
+
+    public get ownBets() {
+        return this._ownBets;
+    }
+
+    public set ownBets(value: Record<string, number>) {
+        this._ownBets = value;
+    }
 }
 
-type InGamePlayerDataMapType = {
+type PlayerInGameMap = {
     [playerId: PlayerId]: PlayerInGame
 }
 
@@ -145,12 +160,13 @@ interface Currency {
 }
 
 export class GameStateManager {
-    private _inGamePlayerDataMap: InGamePlayerDataMapType = {}
+    private _inGamePlayerDataMap: PlayerInGameMap = {}
     private _exchangeRates: ExchangeRateConfigList  = {}
     private _currencies: Currency[] = []
     private _currencyGroupGames: object[] = []
     private _partnerGameSiteExclusions: object[] = []
     private _currencyGroups: object[] = []
+    private _totalBets: Record<string, number> = {};
 
     constructor() {}
 
@@ -158,7 +174,7 @@ export class GameStateManager {
         return this._inGamePlayerDataMap;
     }
 
-    public set ingame(value: InGamePlayerDataMapType) {
+    public set ingame(value: PlayerInGameMap) {
         this._inGamePlayerDataMap = value;
     }
 
@@ -200,5 +216,62 @@ export class GameStateManager {
 
     public set currencyGroups(value: object[]) {
         this._currencyGroups = value;
+    }
+
+    public get totalBets() {
+        return this._totalBets;
+    }
+
+    public set totalBets(value: Record<string, any>) {
+        this._totalBets = value;
+    }
+
+    public realPlayers: { [playerId: string]: RealPlayer } = {}
+    public roundId: number = -1;
+    public gameConfigs: any = {}
+    public disabled: boolean = true;
+    public delayStartTime: number = 0;
+    public umMessages = {};
+    public remainingTime = 0;
+    public result: Partial<ResultType> = {}
+    public settlementResultFromAdmin: any = {}
+}
+
+export class MarbleFootballGameStateManager extends GameStateManager {
+    private _liveStreamServer: string = "";
+    private _tournament: ITournament = {} as ITournament;
+    private _publishedTournament: ITournament = {} as ITournament;
+    private _playerBetCount: Record<string, string[]> = {};
+
+    public set liveStreamServer(value: string) {
+        this._liveStreamServer = value;
+    }
+
+    public get liveStreamServer() {
+        return this._liveStreamServer;
+    }
+
+    public get tournament() {
+        return this._tournament;
+    }
+
+    public set tournament(value: ITournament) {
+        this._tournament = value;
+    }
+
+    public get publishedTournament() {
+        return this._publishedTournament;
+    }
+
+    public set publishedTournament(value: ITournament) {
+        this._publishedTournament = value;
+    }
+
+    public get playerBetCount() {
+        return this._playerBetCount;
+    }
+
+    public set playerBetCount(value: Record<string, string[]>) {
+        this._playerBetCount = value;
     }
 }

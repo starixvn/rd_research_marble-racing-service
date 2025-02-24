@@ -3,39 +3,37 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { Table } from "sc-game-base";
 import AppConfigs from "../app-configs";
 import { TournamentConsumer } from "../consumers";
-import GameData from "../game-data";
 import GameDefinition from "../game-definition";
 import { retry } from "../helpers";
 import { generateVideoName } from "../helpers/result-helper";
 import defaultVideoTimelines from "../timelines/video-timelines";
-import { GameStateManager } from "../game-state";
-import { getOrDefault } from "sc-game-base/src/core/game-management-api"
+import { GameStateManager, MarbleFootballGameStateManager } from "../game-state";
+import { getOrDefault, post } from "sc-game-base/src/core/game-management-api"
 
 export default class GameCron extends Table.Crons.TableGameCron {
-    declare gameData: GameData;
     declare definition: GameDefinition;
     declare appConfigs: typeof AppConfigs;
-    declare gameStateManager: GameStateManager;
+    declare gameStateManager: MarbleFootballGameStateManager;
 
     tournamentConsumer: TournamentConsumer;
 
     constructor(container: any) {
         super(container);
 
-        this.gameData.liveStreamServer = this.appConfigs.liveStreamServer;
         this.tournamentConsumer = container.tournamentConsumer;
         this.gameStateManager = container.gameStateManager;
+        this.gameStateManager.liveStreamServer = this.appConfigs.liveStreamServer;
     }
 
     async queryLastResult() {
         await super.queryLastResult();
         const lastTournament = await this.tournamentConsumer.getLastTournament();
-        this.gameData.publishedTournament = lastTournament;
+        this.gameStateManager.publishedTournament = lastTournament;
     }
 
     override resetForNewRound() {
         super.resetForNewRound();
-        this.gameData.playerBetCount = {};
+        this.gameStateManager.playerBetCount = {};
         this.gameStateManager.ingame = {}
     }
 
@@ -49,7 +47,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
             return response.data.timeLine;
         } catch (error) {
-            this.logService.logError(`In match ${this.gameData.roundId}, failed to get video timeline ${url} with error: ${error}`);
+            this.logService.logError(`In match ${this.gameStateManager.roundId}, failed to get video timeline ${url} with error: ${error}`);
             throw error;
         }
     }
@@ -59,23 +57,25 @@ export default class GameCron extends Table.Crons.TableGameCron {
         const retries = 3;
 
         try {
+            const resultVideoName =  this.gameStateManager.result.resultVideoName ?? ""
             const videoTimeline = 
                 await retry(
                     () => this.getVideoTimeline(
-                        this.gameData.result.resultVideoName), 
+                       resultVideoName), 
                         retries, 
                         delay);
 
-            this.gameData.result.videoTimeline = videoTimeline;
+            this.gameStateManager.result.videoTimeline = videoTimeline;
         } catch (error) {
             this.logService.logError(`Unexpected error fetching video timelines: ${error}`);
-            this.gameData.result.videoTimeline = this.getDefaultVideoTimeline(this.gameData.result.result);
+            const videoResult = this.gameStateManager.result.result ?? "";
+            this.gameStateManager.result.videoTimeline = this.getDefaultVideoTimeline(videoResult);
         }
     }
 
     getDefaultVideoTimeline(result: string) {
         const videoName = generateVideoName(result, true);
-        this.gameData.result.resultVideoName = videoName;
+        this.gameStateManager.result.resultVideoName = videoName;
 
         const videoTimeline = (defaultVideoTimelines as Record<string, number[]>)[`${videoName}_${result}`];
 
@@ -87,14 +87,14 @@ export default class GameCron extends Table.Crons.TableGameCron {
     async generateRoundData() {
         await this.roundResultConsumer.generateResult();
 
-        this.gameData.settlementResultFromAdmin = {};
+        this.gameStateManager.settlementResultFromAdmin = {};
     }
 
     publishVideoStream() {
         const videoResult = {
-            resultVideoName: this.gameData.result.resultVideoName,
-            videoTimeline: this.gameData.result.videoTimeline,
-            result: this.gameData.result.result,
+            resultVideoName: this.gameStateManager.result.resultVideoName,
+            videoTimeline: this.gameStateManager.result.videoTimeline,
+            result: this.gameStateManager.result.result,
         };
 
         this.runningRoundInfoPublisher.publishToAllUsers({ videoResult });
@@ -103,22 +103,22 @@ export default class GameCron extends Table.Crons.TableGameCron {
     async publishTournament() {
         const tournament = await this.tournamentConsumer.getCurrentTournament();
 
-        this.gameData.publishedTournament = JSON.parse(JSON.stringify(tournament));
+        this.gameStateManager.publishedTournament = JSON.parse(JSON.stringify(tournament));
         this.runningRoundInfoPublisher.publishToAllUsers({ tournament });
     }
 
     override async proceed() {
         const { durations } = this.definition;
 
-        if (this.gameData.remainingTime === durations.wholeRound) {
+        if (this.gameStateManager.remainingTime === durations.wholeRound) {
             await this.checkGameStatus();
         }
 
-        if (!this.gameData.disabled) {
-            this.gameData.remainingTime--;
+        if (!this.gameStateManager.disabled) {
+            this.gameStateManager.remainingTime--;
         }
 
-        const remainingTime = this.gameData.remainingTime;
+        const remainingTime = this.gameStateManager.remainingTime;
         if (remainingTime === durations.startingRound) {
             await this.publishTournament();
         }
@@ -144,7 +144,7 @@ export default class GameCron extends Table.Crons.TableGameCron {
         }
 
         if (remainingTime < 0) {
-            this.gameData.remainingTime = durations.wholeRound;
+            this.gameStateManager.remainingTime = durations.wholeRound;
 
             await this.settleGameRoundConsumer.settleRound();
         }
@@ -159,14 +159,6 @@ export default class GameCron extends Table.Crons.TableGameCron {
         const { placingBets, lockingBet } = this.definition.durations;
 
         return remainingTime < placingBets && remainingTime > lockingBet;
-    }
-
-    async updateExchangeRates(): Promise<void> {
-        super.updateExchangeRates();
-        this.gameStateManager.exchangeRates = await getOrDefault(
-            this.gameManagementApiClient.exchangeRates.getExchangeRates(),
-            this.gameStateManager.exchangeRates
-        );
     }
 
     async getSettingForNewRound(): Promise<void> {
@@ -185,5 +177,101 @@ export default class GameCron extends Table.Crons.TableGameCron {
         this.gameStateManager.currencies = data.currencies;
         this.gameStateManager.partnerGameSiteExclusions = data.partnerGameSiteExclusions;
         this.gameStateManager.currencyGroups = data.currencyGroups;
+    }
+
+    async checkGameStatus(): Promise<void> {
+        const { configName } = this.definition;
+
+        const newGameConfigs = await getOrDefault(
+            this.gameManagementApiClient.gameConfigs.getGameConfigs(configName),
+            this.gameStateManager.gameConfigs
+        );
+        
+        if (!newGameConfigs) {
+            this.logService.logError(`Cannot get game configs of ${this.definition.name}.`)
+        }
+
+        const previouslyDisabled = this.gameStateManager.disabled;
+        const configuredlyDisabled = !newGameConfigs || !newGameConfigs.enabled;
+
+        if (previouslyDisabled) {
+            this.gameStateManager.delayStartTime = this.getDelayStartTime(configuredlyDisabled, newGameConfigs)
+        }
+
+        this.assignNewGameConfigs(newGameConfigs);
+
+        this.gameStateManager.disabled = configuredlyDisabled || this.gameStateManager.delayStartTime > 0;
+
+        await this.getSettingForNewRound();
+
+        if (!this.gameStateManager.gameConfigs.exchangeReload) {
+            await this.updateExchangeRates();
+            await post(this.gameManagementApiClient.gameConfigs.updateExchangeReload(false, configName));
+        }
+
+        this.handleGameStatus(previouslyDisabled);
+    }
+
+    assignNewGameConfigs(newGameConfigs: any): void {
+        const originalOdds = newGameConfigs.odds;
+        let transformedNewGameConfig = {
+            ...newGameConfigs,
+            originalOdds
+        };
+        const { gameConfigs: currentGameConfig } = this.gameStateManager;
+        
+        const boostedChoice = (currentGameConfig as { boostedChoices: string[]}).boostedChoices;
+
+        const typedCurrentGameConfig = currentGameConfig as {
+            odds: Record<string, number>;
+            boostedChoices: string[]
+        }
+
+        if (boostedChoice && boostedChoice.length > 0) {
+            transformedNewGameConfig = Object.assign(transformedNewGameConfig, {
+                odds: typedCurrentGameConfig.odds,
+                boostedChoices: typedCurrentGameConfig.boostedChoices,
+            })
+        }
+
+        this.gameStateManager.gameConfigs = transformedNewGameConfig ?? {}
+    }
+
+    getDelayStartTime(configuredlyDisabled: boolean, newGameConfigs: any) {
+        if (this.gameStateManager.delayStartTime > 0) {
+            return this.gameStateManager.delayStartTime - 1;
+        }
+
+        if (!configuredlyDisabled) {
+            return newGameConfigs?.delayStartTime ?? 0;
+        }
+
+        return 0;
+    }
+
+    async updateExchangeRates() {
+        this.gameStateManager.exchangeRates = await getOrDefault(
+            this.gameManagementApiClient.exchangeRates.getExchangeRates(),
+            this.gameStateManager.exchangeRates
+        );
+    }
+
+    async handleGameStatus(previouslyDisabled: boolean) {
+        const { configName } = this.definition;
+
+        if (this.gameStateManager.disabled) {
+            const { durations } = this.definition;
+
+            const notification = await getOrDefault(this.gameManagementApiClient.notification.getUmMessages(configName), {});
+
+            this.gameStateManager.umMessages = notification;
+
+            this.gameStateManager.remainingTime = durations.wholeRound;
+            this.gameStatusPublisher.publishDisableGameStatus();
+        } else if (previouslyDisabled) {
+            await this.enableGame();
+        } else {
+            this.gameStatusPublisher.publishStartGame();
+        }
     }
 }

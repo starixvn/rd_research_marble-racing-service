@@ -1,8 +1,7 @@
 import { TableProcessBetQueue } from "sc-game-base/src/table/crons";
 import { getOrDefault, callAndForget } from "sc-game-base/src/core/game-management-api";
 import { logger } from "sc-common";
-import GameData from "../game-data";
-import { GameStateManager, Payload, Player, PlayerInGame, Session } from "../game-state";
+import { MarbleFootballGameStateManager, Payload, Player, PlayerInGame, Session } from "../game-state";
 import { tracer } from "sc-instrument";
 
 type BetPayload = {
@@ -16,50 +15,31 @@ type BetPayload = {
 
 
 export default class ProcessBetQueue extends TableProcessBetQueue {
-    private gameStateManager: GameStateManager;
+    private gameStateManager: MarbleFootballGameStateManager;
 
     constructor(props: any) {
         super(props);
         const { gameStateManager } = props;
         this.gameStateManager = gameStateManager; 
     }
-
-    dequeueBets() {
-        this.dequeueManagedBets();
-        // if (!this.gameData.ingame) return;
-        // Object.values(this.gameData.ingame).forEach((playerInGame) => {
-        //     if (!playerInGame.betProcessing && playerInGame.betQueue && playerInGame.betQueue.length > 0) {
-        //         console.log("dequeue original bet")
-        //         const self = this;
-        //         const { player, payload } = playerInGame.betQueue.shift();
-        //         playerInGame.betProcessing = true;
-
-        //         tracer.startActiveSpan("dequeueBet", async (span) => {
-        //             self.proceedBet(player, payload)
-        //                 .then(() => (playerInGame.betProcessing = false))
-        //                 .catch(self.logService.logError)
-        //                 .finally(() => span.end());
-        //         });
-        //     }
-        // });
-    }
-    
     
     adjustTotalBets(player: any, bet: BetPayload, rate: number) {
         super.adjustTotalBets(player, bet, rate);
-//        this.adjustPlayerBetCount(player, bet.betChoice);
+        const { betChoice, amount } = bet;
+        this.gameStateManager.totalBets[betChoice] = (this.gameStateManager.totalBets[betChoice] ?? 0) + amount * rate;
+        this.adjustPlayerBetCount(player, bet.betChoice);
     }
 
-    // adjustPlayerBetCount(player: any, betChoice: string) {
-    //     if (this.definition.choices.includes(betChoice)) {
-    //         if (!this.gameData.playerBetCount[betChoice]) {
-    //             this.gameData.playerBetCount[betChoice] = [];
-    //         }
-    //         !this.gameData.playerBetCount[betChoice].includes(player.UID) && this.gameData.playerBetCount[betChoice].push(player.UID);
-    //     }
-    // }
+    adjustPlayerBetCount(player: any, betChoice: string) {
+        if (this.definition.choices.includes(betChoice)) {
+            if (!this.gameStateManager.playerBetCount[betChoice]) {
+                this.gameStateManager.playerBetCount[betChoice] = [];
+            }
+            !this.gameStateManager.playerBetCount[betChoice].includes(player.UID) && this.gameStateManager.playerBetCount[betChoice].push(player.UID);
+        }
+    }
 
-    private dequeueManagedBets() {
+    dequeueBets() {
         if (!this.gameStateManager.ingame) return;
         const self = this;
         Object.values(this.gameStateManager.ingame).forEach(
@@ -77,14 +57,14 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
         playerInGame.betProcessing = true;
 
         tracer.startActiveSpan("dequeueBet", async (span) => {
-            self.managedProceedBets(player, payload)
+            self.proceedBets(player, payload)
                 .then(() => (playerInGame.betProcessing = false))
                 .catch(self.logService.logError)
                 .finally(() => span.end());
         });
     }
 
-    private async managedProceedBets(player:Player, payload: Payload) {
+    private async proceedBets(player:Player, payload: Payload) {
         const betInfo = this.formatApiBetInfo(payload);
         
         if (!(await this.validateBetRequest(player, payload))) return;
@@ -96,7 +76,7 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
         const { response } = apiResult;
 
         if (apiResult.isOk) {
-            await this.managedHandleSuccessBet(player, response, betInfo.gameRoundId, payload)
+            await this.handleSuccessBet(player, response, betInfo.gameRoundId, payload)
         } else {
             this.handleFailedBet(player, response, payload);
             
@@ -113,8 +93,8 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
         this.baseMetrics.collectBetProcessedTime(totalProcessedTime);
     }
 
-    async managedHandleSuccessBet(player:any, balance: any, roundId: any, bet: any) {
-        const rate = this.managedCalculateCurrencyRate(player.session);
+    async handleSuccessBet(player:any, balance: any, roundId: any, bet: any) {
+        const rate = this.calculateCurrencyRate(player.session);
 
         if (this.betLogsRepository) {
             await this.insertBetLog(player, roundId, bet, rate);
@@ -122,7 +102,7 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
 
         await this.upsertBet(player, roundId, bet, rate);
 
-        if (this.managedIsCountOnTotalBets(player)) {
+        if (this.isCountOnTotalBets(player)) {
             this.adjustTotalBets(player, bet, rate);
         }
 
@@ -154,7 +134,7 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
         }
     }
 
-    managedCalculateCurrencyRate(session: Session) {
+    calculateCurrencyRate(session: Session) {
         const exchangeRates = this.gameStateManager.exchangeRates;
         if (!exchangeRates.code) return 1;
 
@@ -162,12 +142,22 @@ export default class ProcessBetQueue extends TableProcessBetQueue {
         return session.multiplier * playerCurrencyExchangeRate;
     }
     
-    managedIsCountOnTotalBets(player: Player) {
+    isCountOnTotalBets(player: Player) {
         return this.gameStateManager.currencies.some(
             (currency) =>
                 currency.partnerId === player.session.operatorId &&
                 currency.name === player.session.currencyName &&
                 !(currency.isTest && currency.isUncountOnTotal)
         );
+    }
+
+    adjustOwnBets(playerName: string, bet: BetPayload) {
+        super.adjustOwnBets(playerName, bet);
+        const { betChoice, amount } = bet;
+        if (!this.gameStateManager.ingame[playerName]) return;
+
+        const playerInGame = this.gameStateManager.ingame[playerName];
+
+        playerInGame.ownBets[betChoice] = (playerInGame.ownBets[betChoice] ?? 0) + amount;
     }
 }

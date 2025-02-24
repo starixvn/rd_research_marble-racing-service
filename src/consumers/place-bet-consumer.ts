@@ -15,17 +15,17 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
      */
     constructor(definition: GameDefinition, gameData: GameData, publisher: BaseEventPublisher, gameStateManager: GameStateManager) {
         super(definition, gameData, publisher)
-        this._gameStateManager = gameStateManager;
+        this.gameStateManager = gameStateManager;
     }
 
-    private _gameStateManager: GameStateManager;
+    private gameStateManager: GameStateManager;
 
     override consume(player: Player, payload: Payload): void {
 
         Object.assign(payload, {
             amount: payload.amount >> 0,
             freeBet: payload.freeBet ?? false,
-            roundId: payload.roundId ?? this.gameData.roundId,
+            roundId: payload.roundId ?? this.gameStateManager.roundId,
             mode: payload.m ?? this.DisplayMode.Landscape,
             receivedTime: new Date(),
         });
@@ -51,29 +51,27 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
             this.gameData.ingame[name] = newPlayer;
         }
 
-        this.upsertPlayerToManagedGameData(player, payload);
+        this.upsertPlayerToGameState(player, payload);
 
         this.adjustBetTracks(player.profile.name, payload);
-        this.adjustManagedBetTrack(player.profile.name, payload);
   
-        this.gameData.ingame[name].betQueue.push({ player, payload });
-        this._gameStateManager.ingame[name].betQueue.push({ player, payload});
+        this.gameStateManager.ingame[name].betQueue.push({ player, payload});
     }
 
-    adjustManagedBetTrack(name: string, bet: Payload) {
+    adjustBetTracks(name: string, bet: Payload) {
         const { betChoice, amount } = bet;
-        if (this._gameStateManager.ingame?.[name]) {
-            const playerInGame = this._gameStateManager.ingame[name];
+        if (this.gameStateManager.ingame?.[name]) {
+            const playerInGame = this.gameStateManager.ingame[name];
 
             playerInGame.betTracks.set(betChoice, (playerInGame.betTracks.get(betChoice) ?? 0) + amount);
         }
 
     }
 
-    upsertPlayerToManagedGameData(player: any, payload: any) {
+    upsertPlayerToGameState(player: any, payload: any) {
         const name = player.profile.name;
 
-        if (!this._gameStateManager.ingame[name]) {
+        if (!this.gameStateManager.ingame[name]) {
             const newPlayer = new PlayerInGame({
                 clientSeed: (payload.clientSeed) as string,
                 currency: (player.session.currencyName) as string,
@@ -82,7 +80,7 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
                 system: player.session.system as string
             });
 
-            this._gameStateManager.ingame[name] = newPlayer;
+            this.gameStateManager.ingame[name] = newPlayer;
         }
     }
 }
