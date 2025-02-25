@@ -17,19 +17,17 @@ import { RunningRoundInfoPublisher } from "./publishers";
 import TestPublisher from "./publishers/test-publisher";
 import { HistoryQuery } from "./query-apis";
 import SocketRouter from "./router/socket-router";
-import { GameStateManager } from "./game-state";
+import { MarbleFootballGameStateManager } from "./game-state";
 import RoundIdConsumer from "./consumers/round-id-consumer";
+import UserSignInConsumer from "./consumers/user-sign-in-consumer";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     register(appConfigs: any, definition: any, gameData: any): AwilixContainer<any> {
         super.register(appConfigs, definition, gameData);
         this.container.register({
-            gameStateManager: asClass(GameStateManager).singleton(),
-            roundIdConsumer: asClass(RoundIdConsumer).singleton()
+            gameStateManager: asClass(MarbleFootballGameStateManager).singleton(),
         });
-        this.container.register({
-            
-        })
+
         return this.container;
     }
 
@@ -58,7 +56,6 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
 
     registerConsumers() {
         super.registerConsumers();
-
         this.container.register({
             userDisconnectConsumer: asClass(UserDisconnectConsumer).singleton(),
             inGameConsumer: asClass(InGameConsumer).singleton(),
@@ -68,6 +65,8 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             settleGameRoundConsumer: asClass(SettleGameRoundConsumer).singleton().proxy(),
             testConsumer: asClass(TestConsumer).singleton().proxy(),
             placeBetConsumer: asClass(ManagedPlaceBetConsumer).singleton(),
+            roundIdConsumer: asClass(RoundIdConsumer).singleton(),
+            userSignInConsumer: asClass(UserSignInConsumer).singleton(),
         });
     }
 

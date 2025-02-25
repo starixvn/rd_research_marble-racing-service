@@ -1,26 +1,54 @@
 import { Table } from "sc-game-base";
-import GameData from "../game-data";
 import { OddsType } from "../match-configs";
 import { SettlementResultType } from "../models/rounds";
 import type TournamentConsumer from "./tournament-consumer";
+import { GameStateManager, MarbleFootballGameStateManager } from "../game-state";
 
 export default class SettleGameRoundConsumer extends Table.EventConsumers.TableSettleGameRoundConsumer {
-    declare gameData: GameData;
+    declare gameStateManager: MarbleFootballGameStateManager;
     tournamentConsumer: TournamentConsumer;
 
     constructor(container: any) {
         super(container);
 
         this.tournamentConsumer = container.tournamentConsumer;
+        this.gameStateManager = container.gameStateManager;
     }
 
     override async settleRound() {
-        await super.settleRound();
+        const result = this.generateResult();
+        const settlementResult = this.definition.settle(result);
+        const { roundId, exchangeRates } = this.gameStateManager;
+        const newRound = await this.roundsRepository.create({
+            id: roundId,
+            result,
+            settlementResult,
+            time: new Date(),
+            exchangeRateId: exchangeRates.exId,
+        });
+
+        if (newRound) {
+            this.roundResultPublisher.publishRoundResult({result, settlementResult, roundId});
+
+            const finish = {
+                settlementResult,
+                result,
+                roundId: newRound.id,
+                time: newRound.time,
+            };
+
+            this.gameStateManager.roundId = finish.roundId + 1;
+
+            await this.settleBets(finish);
+
+            this.roundResultPublisher.publishWinners(roundId, this.gameStateManager.winningPlayers);
+        }
+        
         await this.updateTournament();
     }
 
     async updateTournament() {
-        const settlementResult = this.definition.settle(this.gameData.result);
+        const settlementResult = this.definition.settle(this.gameStateManager.result);
         const homeWins = settlementResult.home;
 
         await this.tournamentConsumer.updateMatchResult(homeWins);
@@ -60,5 +88,38 @@ export default class SettleGameRoundConsumer extends Table.EventConsumers.TableS
         betResult.netWin = parseFloat(betResult.netWin.toFixed(2));
 
         return betResult;
+    }
+
+    generateResult() {
+        if (this.gameStateManager.result) {
+            return this.gameData.result;
+        } else {
+            const resultFromAdmin = this.gameStateManager.settlementResultFromAdmin;
+            const { randomMode } = this.gameData.gameConfigs;
+            return this.gameStateManager.roundId === resultFromAdmin.roundId ? resultFromAdmin.result : this.definition.generateResult(randomMode);
+        }
+    }
+
+    async settleBets({ settlementResult, roundId, time }: { settlementResult: any, roundId: any, time: any }) {
+        const bets = await this.queryBets(roundId);
+
+        if (bets && bets.length) {
+            await Promise.all(
+                bets.map(async (bet: any) => {
+                    const odds = bet.odds ?? this.gameData.gameConfigs.odds;
+
+                    const betResult = this.calculateBetResult(settlementResult, bet, odds);
+
+                    bet.betwin = betResult.totalWin;
+                    bet.paid = true;
+
+                    await bet.save();
+                    await this.callEndGame(bet, roundId, time, betResult);
+
+                    this.captureBetResult(bet.uid, betResult, bet.rate);
+                    await this.userBetResultPublisher.publish(bet.uid, betResult);
+                })
+            );
+        }
     }
 }

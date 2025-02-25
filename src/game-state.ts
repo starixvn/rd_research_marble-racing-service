@@ -1,3 +1,4 @@
+import { WinningStatus } from "sc-game-base/src/core/game-data";
 import { RealPlayer } from "./game-data";
 import { ResultType } from "./models/rounds";
 import { ITournament } from "./models/tournaments";
@@ -235,6 +236,7 @@ export class GameStateManager {
     public remainingTime = 0;
     public result: Partial<ResultType> = {}
     public settlementResultFromAdmin: any = {}
+    public winningPlayers: Record<string, WinningStatus> = {}
 }
 
 export class MarbleFootballGameStateManager extends GameStateManager {
