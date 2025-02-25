@@ -63,7 +63,7 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
         if (this.gameStateManager.ingame?.[name]) {
             const playerInGame = this.gameStateManager.ingame[name];
 
-            playerInGame.betTracks.set(betChoice, (playerInGame.betTracks.get(betChoice) ?? 0) + amount);
+            playerInGame.betTracks[betChoice]  = (playerInGame.betTracks[betChoice] ?? 0) + amount;
         }
 
     }
@@ -73,11 +73,13 @@ export default class PlaceBetConsumer extends Core.BaseEventConsumers.PlaceBetCo
 
         if (!this.gameStateManager.ingame[name]) {
             const newPlayer = new PlayerInGame({
-                clientSeed: (payload.clientSeed) as string,
-                currency: (player.session.currencyName) as string,
-                name: player.profile.name as string,
-                operatorId: player.session.operatorId as string,
-                system: player.session.system as string
+                name: player.profile.name,
+                currency: player.session.currencyName,
+                system: player.session.system,
+                betTracks: {},
+                betQueue: [],
+                clientSeed: payload.clientSeed,
+                operatorId: player.session.operatorId,
             });
 
             this.gameStateManager.ingame[name] = newPlayer;

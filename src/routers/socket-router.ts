@@ -11,9 +11,11 @@ import GameData from "../game-data";
 import GameDefinition from "../game-definition";
 import { HistoryQuery } from "../query-apis";
 import PlaceBetConsumer from "../consumers/place-bet-consumer";
+import { GameStateManager } from "../game-state";
 export default class SocketRouter extends BaseSocketRouter {
 
     testConsumer: TestConsumer;
+    gameStateManager: GameStateManager;
 
     constructor({
         definition,
@@ -28,6 +30,7 @@ export default class SocketRouter extends BaseSocketRouter {
         playGamePermissionValidator,
         roundQuery,
         testConsumer,
+        gameStateManager,
     }: {
         definition: GameDefinition;
         gameData: GameData;
@@ -40,7 +43,8 @@ export default class SocketRouter extends BaseSocketRouter {
         logService: typeof logger;
         playGamePermissionValidator: PlayGamePermissionValidator;
         roundQuery: RoundQuery;
-        testConsumer: TestConsumer
+        testConsumer: TestConsumer,
+        gameStateManager: GameStateManager
     }) {
         super({
             definition,
@@ -57,6 +61,7 @@ export default class SocketRouter extends BaseSocketRouter {
         });
 
         this.testConsumer = testConsumer;
+        this.gameStateManager = gameStateManager;
     }
 
     init(socketClient: Socket): void {
@@ -67,4 +72,27 @@ export default class SocketRouter extends BaseSocketRouter {
     handleTest(payload: { message: string }) {
         this.testConsumer.consume(this.socketClient, payload)
     }
+
+    verify(payload?: any): boolean {
+        const realPlayer = this.gameStateManager.realPlayers[this.socketClient.id];
+
+        if (realPlayer) return this.playGamePermissionValidator.validate(realPlayer.session, this.socketClient);
+        this.userSignInPublisher.publishUnauthorizedMessage(this.socketClient);
+        this.socketClient.disconnect(true);
+
+        return false;
+    }
+    
+    handlePlaceBet(payload: any) {
+        try {
+            if (!this.verify()) {
+                return;
+            }
+
+            this.placeBetConsumer.consume(this.gameStateManager.realPlayers[this.socketClient.id], payload);
+        } catch (error) {
+            this.logService.logError(error);
+        }
+    }
+
 }

@@ -16,10 +16,13 @@ import { betLogs, bets, results, rounds, tmpBets, tournaments } from "./models";
 import { RunningRoundInfoPublisher } from "./publishers";
 import TestPublisher from "./publishers/test-publisher";
 import { HistoryQuery } from "./query-apis";
-import SocketRouter from "./router/socket-router";
+import SocketRouter from "./routers/socket-router";
 import { MarbleFootballGameStateManager } from "./game-state";
 import RoundIdConsumer from "./consumers/round-id-consumer";
 import UserSignInConsumer from "./consumers/user-sign-in-consumer";
+import PlayGamePermissionValidator from "./validators/play-game-permission-validator";
+import { placeBetPublisher } from "../tests/unit-tests/global-stubs";
+import PlaceBetPublisher from "./publishers/place-bet-publisher";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     register(appConfigs: any, definition: any, gameData: any): AwilixContainer<any> {
@@ -76,6 +79,7 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
         this.container.register({
             runningRoundInfoPublisher: asClass(RunningRoundInfoPublisher).singleton(),
             testPublisher: asClass(TestPublisher).singleton().proxy(),
+            placeBetPublisher: asClass(PlaceBetPublisher).singleton()
         });
     }
 
@@ -91,6 +95,13 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
         super.registerRouters();
         this.container.register({
             socketRouter: asClass(SocketRouter).proxy(),
+        })
+    }
+
+    registerValidators(): void {
+        super.registerValidators()
+        this.container.register({
+            playGamePermissionValidator: asClass(PlayGamePermissionValidator).singleton(),
         })
     }
 }

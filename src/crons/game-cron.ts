@@ -109,7 +109,6 @@ export default class GameCron extends Table.Crons.TableGameCron {
 
     override async proceed() {
         const { durations } = this.definition;
-
         if (this.gameStateManager.remainingTime === durations.wholeRound) {
             await this.checkGameStatus();
         }

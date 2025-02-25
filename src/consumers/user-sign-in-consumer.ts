@@ -87,5 +87,6 @@ export default class UserSignInConsumer extends TableUserSignInConsumer {
         this.gameStateManager.realPlayers[socketClient.id] = userData;
 
         socketClient.emit("signedIn");
+        this.userSignInPublisher.publishToGameMessage(socketClient, this.definition.name);
     }
 }

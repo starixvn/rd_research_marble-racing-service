@@ -2,6 +2,7 @@ import { WinningStatus } from "sc-game-base/src/core/game-data";
 import { RealPlayer } from "./game-data";
 import { ResultType } from "./models/rounds";
 import { ITournament } from "./models/tournaments";
+import { Socket } from "socket.io";
 
 
 export interface Player {
@@ -21,6 +22,8 @@ export interface Session {
     operatorId: string;
     currencyCode: string;
     multiplier: number;
+    currencyGroupId: string;
+    siteName: string;
 }
 
 export interface Payload {
@@ -40,6 +43,8 @@ export interface PlayerConstructorProps {
 
     clientSeed: string;
     operatorId: string;
+    betTracks: Record<BetChoice, number>;
+    betQueue: Array<BetQueueItem>;
 } 
 type BetQueueItem = {
     player: Player,
@@ -50,6 +55,10 @@ type PlayerId = string;
 
 class ManagedBetQueue {
     private _betQueue: Array<BetQueueItem> = []
+
+    constructor(betQueue: Array<BetQueueItem> = []) {
+        this._betQueue = betQueue;
+    }
 
     public push(betQueueItem: BetQueueItem) {
         this._betQueue.push(betQueueItem);
@@ -69,6 +78,11 @@ class ManagedBetQueue {
 class ManagedBetTrack {
     private _betTracks: Record<BetChoice, number> = {};
 
+    constructor(betTracks?: Record<BetChoice, number>) {
+        if (!betTracks) return;
+        this._betTracks = betTracks;
+    }
+
     public get(key: string) {
         return this._betTracks[key];
     }
@@ -81,6 +95,10 @@ class ManagedBetTrack {
     public keys() {
         return Object.keys(this._betTracks);
     }
+
+    public getBetTrack() {
+        return this._betTracks;
+    }
 }
 
 export type BetTracks = {
@@ -88,12 +106,12 @@ export type BetTracks = {
 }
 
 export class PlayerInGame {
-    private _name: string;
-    private _currency: string;
-    private _system: string;
-    private _clientSeed: string;
-    private _operatorId: string;
-
+    name: string;
+    currency: string;
+    system: string;
+    clientSeed: string;
+    operatorId: string;
+    partnerId: string = "";
     private _betProcessing: boolean = false;
 
     private _betTracks: ManagedBetTrack = new ManagedBetTrack();
@@ -106,12 +124,16 @@ export class PlayerInGame {
         currency,
         operatorId,
         system,
+        betTracks,
+        betQueue,
     }: PlayerConstructorProps) {
-        this._name = name;
-        this._clientSeed = clientSeed;
-        this._currency = currency;
-        this._operatorId = operatorId,
-        this._system = system;
+        this.name = name;
+        this.clientSeed = clientSeed;
+        this.currency = currency;
+        this.operatorId = operatorId,
+        this.system = system;
+        this._betTracks = new ManagedBetTrack(betTracks)
+        this._betQueue = new ManagedBetQueue(betQueue);
     }
 
     public get betQueue() {
@@ -119,7 +141,11 @@ export class PlayerInGame {
     }
 
     public get betTracks() {
-        return this._betTracks;
+        return this._betTracks.getBetTrack();
+    }
+
+    public set betTracks(value: Record<BetChoice, number>) {
+        this._betTracks = new ManagedBetTrack(value);
     }
 
     public get betProcessing() {
@@ -164,9 +190,7 @@ export class GameStateManager {
     private _inGamePlayerDataMap: PlayerInGameMap = {}
     private _exchangeRates: ExchangeRateConfigList  = {}
     private _currencies: Currency[] = []
-    private _currencyGroupGames: object[] = []
-    private _partnerGameSiteExclusions: object[] = []
-    private _currencyGroups: object[] = []
+   
     private _totalBets: Record<string, number> = {};
 
     constructor() {}
@@ -195,30 +219,6 @@ export class GameStateManager {
         this._currencies = value;
     }
 
-    public set currencyGroupGames(value: object[]) {
-        this._currencyGroupGames = value;
-    }
-
-    public get currencyGroupGames() {
-        return this._currencyGroupGames;
-    }
-
-    public get partnerGameSiteExclusions() {
-        return this._partnerGameSiteExclusions;
-    }
-
-    public set partnerGameSiteExclusions(value: object[]) {
-        this._partnerGameSiteExclusions = value;
-    }
-
-    public get currencyGroups() {
-        return this._currencyGroups;
-    }
-
-    public set currencyGroups(value: object[]) {
-        this._currencyGroups = value;
-    }
-
     public get totalBets() {
         return this._totalBets;
     }
@@ -237,6 +237,11 @@ export class GameStateManager {
     public result: Partial<ResultType> = {}
     public settlementResultFromAdmin: any = {}
     public winningPlayers: Record<string, WinningStatus> = {}
+    public admins: Record<string, { socketClient: Socket }> = {};
+    public currencyGroupGames: any[] = []
+    public currencyGroups: any[] = []
+    public partnerGameSiteExclusions: any[] = []
+    public lastResultRecord: Partial<ResultType> = {}
 }
 
 export class MarbleFootballGameStateManager extends GameStateManager {
