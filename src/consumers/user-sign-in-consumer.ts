@@ -22,7 +22,7 @@ export default class UserSignInConsumer extends TableUserSignInConsumer {
         playGamePermissionValidator: PlayGamePermissionValidator,
         gameManagementApiClientFactory: GameManagementApiClientFactory,
         appConfigs: Object,
-        gameStateManager: GameStateManager
+        gameStateManager: GameStateManager,
     ) {
         super(definition, gameData, userSignInPublisher, playGamePermissionValidator, appConfigs, gameManagementApiClientFactory);
         this.gameStateManager = gameStateManager;

@@ -19,36 +19,41 @@ export default class SettleGameRoundConsumer extends Table.EventConsumers.TableS
         const result = this.generateResult();
         const settlementResult = this.definition.settle(result);
         const { roundId, exchangeRates } = this.gameStateManager;
-        const newRound = await this.roundsRepository.create({
-            id: roundId,
-            result,
-            settlementResult,
-            time: new Date(),
-            exchangeRateId: exchangeRates.exId,
-        });
-
-        if (newRound) {
-            this.roundResultPublisher.publishRoundResult({result, settlementResult, roundId});
-
-            const finish = {
-                settlementResult,
+        try {
+            const newRound = await this.roundsRepository.create({
+                id: roundId,
                 result,
-                roundId: newRound.id,
-                time: newRound.time,
-            };
-
-            this.gameStateManager.roundId = finish.roundId + 1;
-
-            await this.settleBets(finish);
-
-            this.roundResultPublisher.publishWinners(roundId, this.gameStateManager.winningPlayers);
+                settlementResult,
+                time: new Date(),
+                exchangeRateId: exchangeRates.exId,
+            });
+    
+            if (newRound) {
+                this.roundResultPublisher.publishRoundResult({result, settlementResult, roundId});
+    
+                const finish = {
+                    settlementResult,
+                    result,
+                    roundId: newRound.id,
+                    time: newRound.time,
+                };
+    
+                this.gameStateManager.roundId = finish.roundId + 1;
+    
+                await this.settleBets(finish);
+    
+                this.roundResultPublisher.publishWinners(roundId, this.gameStateManager.winningPlayers);
+            }
+            
+            await this.updateTournament(result);
+        } catch (er) {
+            console.log(er);
         }
         
-        await this.updateTournament();
     }
 
-    async updateTournament() {
-        const settlementResult = this.definition.settle(this.gameStateManager.result);
+    async updateTournament(result: any) {
+        const settlementResult = this.definition.settle(result);
         const homeWins = settlementResult.home;
 
         await this.tournamentConsumer.updateMatchResult(homeWins);
@@ -91,11 +96,11 @@ export default class SettleGameRoundConsumer extends Table.EventConsumers.TableS
     }
 
     generateResult() {
-        if (this.gameStateManager.result) {
-            return this.gameData.result;
+        if (this.gameStateManager.result && Object.entries(this.gameStateManager.result).length !== 0) {
+            return this.gameStateManager.result;
         } else {
             const resultFromAdmin = this.gameStateManager.settlementResultFromAdmin;
-            const { randomMode } = this.gameData.gameConfigs;
+            const { randomMode } = this.gameStateManager.gameConfigs;
             return this.gameStateManager.roundId === resultFromAdmin.roundId ? resultFromAdmin.result : this.definition.generateResult(randomMode);
         }
     }
@@ -106,7 +111,7 @@ export default class SettleGameRoundConsumer extends Table.EventConsumers.TableS
         if (bets && bets.length) {
             await Promise.all(
                 bets.map(async (bet: any) => {
-                    const odds = bet.odds ?? this.gameData.gameConfigs.odds;
+                    const odds = bet.odds ?? this.gameStateManager.gameConfigs.odds;
 
                     const betResult = this.calculateBetResult(settlementResult, bet, odds);
 

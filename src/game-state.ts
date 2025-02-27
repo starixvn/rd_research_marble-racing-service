@@ -230,11 +230,11 @@ export class GameStateManager {
     public realPlayers: { [playerId: string]: RealPlayer } = {}
     public roundId: number = -1;
     public gameConfigs: any = {}
-    public disabled: boolean = true;
+    public disabled: boolean = false;
     public delayStartTime: number = 0;
     public umMessages = {};
     public remainingTime = 0;
-    public result: Partial<ResultType> = {}
+    public result: Partial<ResultType> = {};
     public settlementResultFromAdmin: any = {}
     public winningPlayers: Record<string, WinningStatus> = {}
     public admins: Record<string, { socketClient: Socket }> = {};

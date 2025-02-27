@@ -41,9 +41,7 @@ export default class BaseEventPublisher extends Core.BaseEventPublishers.BaseEve
         const realPlayer = Object.values(this.gameStateManager.realPlayers)
             .find(player => player.UID === userId && player.socketClient && player.socketClient.connected);
         
-        if (!realPlayer || !realPlayer.socketClient) {
-            realPlayer?.socketClient.emit(path, payload);
-        }
+            realPlayer?.socketClient?.emit(path, payload);
     }
 
     publishToAllAdmins(payload: any): void {
