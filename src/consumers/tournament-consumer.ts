@@ -1,6 +1,7 @@
 import type appConfigs from "../app-configs";
 import { TOURNAMENT_CODES } from "../constants";
 import GameData from "../game-data";
+import { MarbleFootballGameStateManager } from "../game-state";
 import { shuffle } from "../helpers";
 import generate from "../helpers/tournament/generate";
 import updateNext from "../helpers/tournament/update-next";
@@ -11,6 +12,7 @@ export default class TournamentConsumer {
     tournamentRepository: typeof tournaments;
     appConfigs: typeof appConfigs;
     gameData: GameData;
+    gameStateManager: MarbleFootballGameStateManager;
     roundsRepository: typeof rounds;
 
     constructor(container: any) {
@@ -18,10 +20,11 @@ export default class TournamentConsumer {
         this.appConfigs = container.appConfigs;
         this.gameData = container.gameData;
         this.roundsRepository = container.roundsRepository;
+        this.gameStateManager = container.gameStateManager;
     }
 
     async updateMatchResult(homeWin: boolean) {
-        const roundId = this.gameData.roundId - 1;
+        const roundId = this.gameStateManager.roundId - 1;
         const tournament = await this.getCurrentTournament();
 
         if (tournament) {
@@ -38,7 +41,7 @@ export default class TournamentConsumer {
                 updateNext(tournament.matches, tournament.currentMatch, team);
             }
 
-            this.gameData.tournament = await this.tournamentRepository.findOneAndUpdate(
+            this.gameStateManager.tournament = await this.tournamentRepository.findOneAndUpdate(
                 { _id: tournament._id },
                 {
                     matches: tournament.matches,
@@ -51,20 +54,20 @@ export default class TournamentConsumer {
     }
 
     async getCurrentTournament(): Promise<ITournament> {
-        if (this.gameData.tournament.ended === false) {
-            return this.gameData.tournament;
+        if (this.gameStateManager.tournament.ended === false) {
+            return this.gameStateManager.tournament;
         }
 
         const runningTournament: ITournament = await this.tournamentRepository.findOne({ ended: false }).lean().exec();
 
         if (runningTournament) {
-            this.gameData.tournament = runningTournament;
+            this.gameStateManager.tournament = runningTournament;
             return runningTournament;
         }
 
-        this.gameData.tournament = await this.createNewTournament();
+        this.gameStateManager.tournament = await this.createNewTournament();
 
-        return this.gameData.tournament;
+        return this.gameStateManager.tournament;
     }
 
     async getLastTournament(): Promise<ITournament> {

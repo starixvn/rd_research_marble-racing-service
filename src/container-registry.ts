@@ -21,9 +21,10 @@ import { MarbleFootballGameStateManager } from "./game-state";
 import RoundIdConsumer from "./consumers/round-id-consumer";
 import UserSignInConsumer from "./consumers/user-sign-in-consumer";
 import PlayGamePermissionValidator from "./validators/play-game-permission-validator";
-import { placeBetPublisher } from "../tests/unit-tests/global-stubs";
+import { gameStatusPublisher, placeBetPublisher } from "../tests/unit-tests/global-stubs";
 import PlaceBetPublisher from "./publishers/place-bet-publisher";
 import BaseEventPublisher from "./publishers/base-event-publiser";
+import GameStatusPublisher from "./publishers/game-status-publisher";
 
 export default class ContainerRegistry extends Table.TableContainerRegistry {
     register(appConfigs: any, definition: any, gameData: any): AwilixContainer<any> {
@@ -81,7 +82,8 @@ export default class ContainerRegistry extends Table.TableContainerRegistry {
             publisher: asClass(BaseEventPublisher).singleton(),
             runningRoundInfoPublisher: asClass(RunningRoundInfoPublisher).singleton(),
             testPublisher: asClass(TestPublisher).singleton().proxy(),
-            placeBetPublisher: asClass(PlaceBetPublisher).singleton()
+            placeBetPublisher: asClass(PlaceBetPublisher).singleton(),
+            gameStatusPublisher: asClass(GameStatusPublisher).singleton()
         });
     }
 

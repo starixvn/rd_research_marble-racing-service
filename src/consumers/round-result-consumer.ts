@@ -3,9 +3,11 @@ import { encrypt } from "sc-game-base/src/core/helpers/crypto-helper";
 import GameData from "../game-data";
 import { resultHelper } from "../helpers";
 import type TournamentConsumer from "./tournament-consumer";
+import { MarbleFootballGameStateManager } from "../game-state";
 export default class RoundResultConsumer extends RoundResultConsumerBase {
     declare gameData: GameData;
     tournamentConsumer: TournamentConsumer;
+    gameStateManager: MarbleFootballGameStateManager;
 
     constructor(container: any) {
         super(
@@ -17,10 +19,11 @@ export default class RoundResultConsumer extends RoundResultConsumerBase {
         );
 
         this.tournamentConsumer = container.tournamentConsumer;
+        this.gameStateManager = container.gameStateManager;
     }
 
     override getDataForGenerateResult() {
-        const { randomMode } = this.gameData.gameConfigs;
+        const { randomMode } = this.gameStateManager.gameConfigs;
         return { randomMode };
     }
 
@@ -28,15 +31,15 @@ export default class RoundResultConsumer extends RoundResultConsumerBase {
         await super.generateResult();
 
         const tournament = await this.tournamentConsumer.getCurrentTournament();
-        this.gameData.result.tournamentId = tournament._id;
+        this.gameStateManager.result.tournamentId = tournament._id;
         await this.createResultRecord();
     }
 
     override generateResultFromAdmin() {
-        const { roundId, settlementResultFromAdmin: resultFromAdmin } = this.gameData;
+        const { roundId, settlementResultFromAdmin: resultFromAdmin } = this.gameStateManager;
 
         if (roundId === resultFromAdmin.roundId) {
-            this.gameData.result = resultHelper.generateResultFromAdminRawResult(resultFromAdmin.result);
+            this.gameStateManager.result = resultHelper.generateResultFromAdminRawResult(resultFromAdmin.result);
             return true;
         }
 
@@ -45,8 +48,8 @@ export default class RoundResultConsumer extends RoundResultConsumerBase {
 
     async createResultRecord() {
         await this.resultsRepository.create({
-            roundId: this.gameData.roundId,
-            encryptedResult: encrypt(JSON.stringify(this.gameData.result)),
+            roundId: this.gameStateManager.roundId,
+            encryptedResult: encrypt(JSON.stringify(this.gameStateManager.result)),
         });
     }
 }

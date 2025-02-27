@@ -7,7 +7,10 @@ export type ResultType = {
     result: string;
     resultVideoName: string;
     videoTimeline?: number[];
+    roundId?: number;
+    encryptedResult?: string;
 };
+
 
 const resultSchema = new mongoose.Schema<ResultType>(
     {
